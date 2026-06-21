@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { margin: 0; padding: 0; }
+  @keyframes nbFeedIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes nbToastIn { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes nbSheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  .nb-sheet { animation: nbSheetIn 0.34s cubic-bezier(0.22, 1, 0.36, 1); }
+  .nb-feed-anim { animation: nbFeedIn 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+  .nb-toast { animation: nbToastIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .nb-scroll::-webkit-scrollbar { display: none; }
+  .nb-search::placeholder { color: #9a9ea6; font-weight: 500; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; background: radial-gradient(120% 120% at 50% 0%, #20232b 0%, #0e0f13 60%); font-family: 'Manrope', system-ui, sans-serif; padding: 32px 0;">
+
+  <!-- DEVICE -->
+  <div style="position: relative; width: 392px; height: 844px; background: #0a0a0c; border-radius: 56px; padding: 11px; box-shadow: 0 50px 120px -20px rgba(0,0,0,0.65), inset 0 0 0 2px rgba(255,255,255,0.06);">
+
+    <!-- SCREEN -->
+    <div style="--accent: {{ accent }}; --accent-text: {{ accentText }}; position: relative; width: 100%; height: 100%; background: #f6f6f4; border-radius: 46px; overflow: hidden; display: flex; flex-direction: column;">
+
+      <!-- STATUS BAR -->
+      <div style="position: relative; z-index: 5; flex: none; height: 52px; padding: 18px 30px 0; display: flex; align-items: center; justify-content: space-between; background: #ffffff;">
+        <span style="font-size: 15px; font-weight: 700; color: #111317; letter-spacing: 0.2px;">9:41</span>
+        <div style="display: flex; align-items: center; gap: 7px; color: #111317;">
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4.5" width="3" height="7.5" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 2.4c2.3 0 4.4.9 6 2.4l1.4-1.5A11 11 0 0 0 8.5.4 11 11 0 0 0 1.1 3.3L2.5 4.8a8.6 8.6 0 0 1 6-2.4Zm0 4c1.2 0 2.3.5 3.1 1.3l1.4-1.5a6.9 6.9 0 0 0-9 0L5.4 7.7A4.5 4.5 0 0 1 8.5 6.4Zm0 4 2-2.1a2.9 2.9 0 0 0-4 0l2 2.1Z"/></svg>
+          <div style="width: 26px; height: 13px; border: 1.5px solid rgba(17,19,23,0.4); border-radius: 4px; padding: 1.5px; position: relative;"><div style="height: 100%; width: 75%; background: #111317; border-radius: 1.5px;"></div><div style="position: absolute; right: -3.5px; top: 3.5px; width: 2px; height: 5px; background: rgba(17,19,23,0.4); border-radius: 0 2px 2px 0;"></div></div>
+        </div>
+      </div>
+
+      <!-- HEADER (home only) -->
+      <sc-if value="{{ showHeader }}" hint-placeholder-val="{{ true }}">
+      <div style="position: relative; z-index: 5; flex: none; background: #ffffff; padding: 4px 20px 16px; box-shadow: 0 1px 0 rgba(17,19,23,0.05);">
+        <!-- brand row -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; align-items: center; gap: 9px;">
+              <div style="width: 26px; height: 26px; border-radius: 9px; background: var(--accent, #CCFF00); display: flex; align-items: center; justify-content: center; transition: background 0.25s ease;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text, #1A1A1A)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>
+              </div>
+              <span style="font-size: 22px; font-weight: 800; color: #111317; letter-spacing: -0.6px;">Nearbuy</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; padding-left: 1px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a8f98" stroke-width="2.4"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+              <span style="font-size: 11.5px; font-weight: 600; color: #8a8f98;">East Legon · 5 km radius</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <button onClick="{{ onCreate }}" style="display: flex; align-items: center; gap: 5px; border: none; border-radius: 13px; background: var(--accent, #CCFF00); color: var(--accent-text, #1A1A1A); font-family: inherit; font-size: 13px; font-weight: 800; padding: 9px 13px; cursor: pointer; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--accent, #CCFF00) 75%, transparent); transition: background 0.25s ease, color 0.25s ease, transform 0.12s ease;" style-active="transform: scale(0.95);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Sell</span>
+            </button>
+            <button onClick="{{ onBell }}" style="position: relative; width: 42px; height: 42px; border: none; border-radius: 14px; background: #f3f3f1; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.12s ease;" style-active="transform: scale(0.92);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a3d44" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.5 21a2 2 0 0 1-3 0"/></svg>
+              <div style="position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent, #CCFF00); border: 2px solid #f3f3f1; transition: background 0.25s ease;"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- MODE SELECTOR (segmented) -->
+        <div style="position: relative; display: flex; background: #eeeeec; border-radius: 16px; padding: 5px;">
+          <div style="position: absolute; top: 5px; left: 5px; bottom: 5px; width: calc((100% - 10px) / 3); background: var(--accent, #CCFF00); border-radius: 12px; box-shadow: 0 4px 12px -2px rgba(17,19,23,0.25); transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease; transform: translateX({{ pillX }});"></div>
+          <button onClick="{{ onShop }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12.5px; font-weight: 800; letter-spacing: 0.6px; cursor: pointer; transition: color 0.2s ease; color: {{ shopTxt }};">SHOP</button>
+          <button onClick="{{ onServices }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12.5px; font-weight: 800; letter-spacing: 0.6px; cursor: pointer; transition: color 0.2s ease; color: {{ servicesTxt }};">SERVICES</button>
+          <button onClick="{{ onRent }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12.5px; font-weight: 800; letter-spacing: 0.6px; cursor: pointer; transition: color 0.2s ease; color: {{ rentTxt }};">RENT</button>
+        </div>
+
+        <!-- search -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; background: #f3f3f1; border-radius: 14px; padding: 12px 14px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+          <input class="nb-search" ref="{{ searchRef }}" value="{{ query }}" onInput="{{ onQueryInput }}" placeholder="{{ searchHint }}" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; font-weight: 500; color: #111317; padding: 0;" />
+          <sc-if value="{{ isSearching }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ onClearSearch }}" style="flex: none; width: 20px; height: 20px; border: none; border-radius: 50%; background: #d9d9d5; color: #6b6f76; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- BODY -->
+      <div class="nb-scroll" style="flex: 1; overflow-y: auto; background: #f6f6f4; padding: 18px 20px 110px;">
+
+        <!-- ===== HOME / SEARCH FEED ===== -->
+        <sc-if value="{{ showFeed }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <!-- promo strip (home, no active query) -->
+            <sc-if value="{{ showPromo }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(110deg, #15171c 0%, #24272f 100%); border-radius: 20px; padding: 16px 18px; margin-bottom: 22px; overflow: hidden; position: relative;">
+                <div style="position: absolute; right: -28px; top: -28px; width: 120px; height: 120px; border-radius: 50%; background: var(--accent, #CCFF00); opacity: 0.18; transition: background 0.25s ease;"></div>
+                <div style="position: relative; z-index: 2;">
+                  <div style="font-size: 13.5px; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">{{ promoTitle }}</div>
+                  <div style="font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.6); margin-top: 3px;">{{ promoSub }}</div>
+                </div>
+                <button onClick="{{ onExplore }}" style="position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 5px; border: none; background: var(--accent, #CCFF00); color: var(--accent-text, #1A1A1A); font-family: inherit; font-size: 11.5px; font-weight: 800; padding: 8px 12px; border-radius: 11px; cursor: pointer; transition: background 0.25s ease, color 0.25s ease, transform 0.12s ease;" style-active="transform: scale(0.95);">
+                  <span>Explore</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
+              </div>
+            </sc-if>
+
+            <!-- section header -->
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
+              <span style="font-size: 17px; font-weight: 800; color: #111317; letter-spacing: -0.4px;">{{ sectionLabel }}</span>
+              <span style="font-size: 12.5px; font-weight: 700; color: #9a9ea6;">{{ sectionRight }}</span>
+            </div>
+
+            <!-- cards -->
+            <div class="nb-feed-anim" key="{{ feedKey }}" style="display: flex; flex-direction: column; gap: 16px;">
+              <sc-for list="{{ cards }}" as="card" hint-placeholder-count="3">
+                <div style="background: #ffffff; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 22px -10px rgba(17,19,23,0.18), 0 1px 0 rgba(17,19,23,0.03);">
+                  <!-- image -->
+                  <div style="position: relative; height: 152px; background-image: repeating-linear-gradient(135deg, #ededea 0 12px, #f4f4f1 12px 24px); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-family: ui-monospace, 'SF Mono', monospace; font-size: 10.5px; font-weight: 600; color: #b6b6b1; letter-spacing: 0.3px; background: rgba(255,255,255,0.6); padding: 4px 9px; border-radius: 7px;">{{ card.imgLabel }}</span>
+                    <div style="position: absolute; top: 12px; right: 12px; display: flex; align-items: center; gap: 4px; background: rgba(17,19,23,0.82); backdrop-filter: blur(4px); color: #ffffff; font-size: 12.5px; font-weight: 800; padding: 6px 11px; border-radius: 11px;">
+                      <span>{{ card.price }}</span><span style="font-weight: 600; opacity: 0.65; font-size: 10.5px;">{{ card.unit }}</span>
+                    </div>
+                    <div style="position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.92); color: #111317; font-size: 10.5px; font-weight: 800; padding: 5px 9px; border-radius: 9px;">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111317" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.3 4.6 5.1.7-3.7 3.6.9 5L12 14.9 7.4 17l.9-5L4.6 8.3l5.1-.7L12 3Z"/></svg>
+                      <span>{{ card.trust }}</span>
+                    </div>
+                  </div>
+                  <!-- body -->
+                  <div style="padding: 15px 16px 16px;">
+                    <div style="font-size: 15.5px; font-weight: 800; color: #111317; letter-spacing: -0.3px;">{{ card.title }}</div>
+                    <div style="font-size: 12.5px; font-weight: 500; color: #84888f; margin-top: 4px;">{{ card.meta }}</div>
+                    <!-- tags -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px;">
+                      <sc-for list="{{ card.tags }}" as="tag" hint-placeholder-count="2">
+                        <span style="font-size: 10.5px; font-weight: 700; color: #4a4d54; padding: 5px 10px; border-radius: 9px; background: color-mix(in srgb, var(--accent, #CCFF00) 13%, #ffffff); border: 1px solid color-mix(in srgb, var(--accent, #CCFF00) 42%, transparent);">{{ tag }}</span>
+                      </sc-for>
+                    </div>
+                    <!-- cta -->
+                    <button onClick="{{ card.onCta }}" style="margin-top: 15px; width: 100%; border: none; background: var(--accent, #CCFF00); color: var(--accent-text, #1A1A1A); font-family: inherit; font-size: 14px; font-weight: 800; letter-spacing: 0.1px; padding: 13px 0; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: background 0.25s ease, color 0.25s ease, transform 0.12s ease;" style-active="transform: scale(0.97);">
+                      <span>{{ cta }}</span>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- empty state -->
+            <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 40px 24px; gap: 8px;">
+                <div style="width: 56px; height: 56px; border-radius: 18px; background: #ececea; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 800; color: #111317;">No matches for "{{ query }}"</div>
+                <div style="font-size: 12.5px; font-weight: 500; color: #84888f;">Try a different keyword or switch mode.</div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- ===== CHAT ===== -->
+        <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+          <div class="nb-feed-anim">
+            <div style="font-size: 22px; font-weight: 800; color: #111317; letter-spacing: -0.5px; margin-bottom: 16px;">Messages</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <sc-for list="{{ chatThreads }}" as="t" hint-placeholder-count="4">
+                <button onClick="{{ t.onOpen }}" style="display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; border: none; background: #ffffff; border-radius: 16px; padding: 13px 14px; cursor: pointer; box-shadow: 0 4px 16px -12px rgba(17,19,23,0.2); transition: transform 0.12s ease;" style-active="transform: scale(0.985);">
+                  <div style="flex: none; position: relative; width: 46px; height: 46px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 16%, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #111317;">
+                    {{ t.initial }}
+                    <sc-if value="{{ t.unread }}" hint-placeholder-val="{{ false }}"><div style="position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid #f6f6f4;"></div></sc-if>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+                      <span style="font-size: 14.5px; font-weight: 800; color: #111317;">{{ t.name }}</span>
+                      <span style="flex: none; font-size: 11px; font-weight: 600; color: #9a9ea6;">{{ t.time }}</span>
+                    </div>
+                    <div style="font-size: 12.5px; font-weight: 500; color: #84888f; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.last }}</div>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ===== WALLET ===== -->
+        <sc-if value="{{ isWallet }}" hint-placeholder-val="{{ false }}">
+          <div class="nb-feed-anim">
+            <div style="font-size: 22px; font-weight: 800; color: #111317; letter-spacing: -0.5px; margin-bottom: 16px;">Wallet</div>
+            <!-- balance -->
+            <div style="position: relative; overflow: hidden; background: linear-gradient(125deg, #15171c 0%, #24272f 100%); border-radius: 22px; padding: 20px; margin-bottom: 20px;">
+              <div style="position: absolute; right: -30px; top: -30px; width: 130px; height: 130px; border-radius: 50%; background: var(--accent); opacity: 0.2;"></div>
+              <div style="position: relative; z-index: 2;">
+                <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.55); letter-spacing: 0.3px;">Available balance</div>
+                <div style="font-size: 30px; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-top: 5px;">GHS 1,250<span style="font-size: 18px; color: rgba(255,255,255,0.5);">.00</span></div>
+                <div style="display: flex; gap: 9px; margin-top: 16px;">
+                  <button onClick="{{ onTopUp }}" style="flex: 1; border: none; background: var(--accent); color: var(--accent-text); font-family: inherit; font-size: 13px; font-weight: 800; padding: 11px 0; border-radius: 13px; cursor: pointer; transition: transform 0.12s ease;" style-active="transform: scale(0.97);">Top up</button>
+                  <button onClick="{{ onWithdraw }}" style="flex: 1; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #ffffff; font-family: inherit; font-size: 13px; font-weight: 800; padding: 11px 0; border-radius: 13px; cursor: pointer; transition: transform 0.12s ease;" style-active="transform: scale(0.97);">Withdraw</button>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #111317; margin-bottom: 12px;">Recent activity</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <sc-for list="{{ walletTxns }}" as="x" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 12px; background: #ffffff; border-radius: 16px; padding: 13px 14px; box-shadow: 0 4px 16px -12px rgba(17,19,23,0.2);">
+                  <div style="flex: none; width: 38px; height: 38px; border-radius: 11px; background: #f3f3f1; display: flex; align-items: center; justify-content: center;">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3a3d44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m6 11 6 6 6-6" transform="{{ x.arrow }}"/></svg>
+                  </div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: #111317;">{{ x.label }}</div>
+                    <div style="font-size: 11.5px; font-weight: 500; color: #9a9ea6; margin-top: 1px;">{{ x.sub }}</div>
+                  </div>
+                  <div style="flex: none; font-size: 14px; font-weight: 800; color: {{ x.amtColor }};">{{ x.amount }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ===== PROFILE ===== -->
+        <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+          <div class="nb-feed-anim">
+            <div style="display: flex; align-items: center; gap: 15px; background: #ffffff; border-radius: 22px; padding: 18px; margin-bottom: 20px; box-shadow: 0 6px 22px -14px rgba(17,19,23,0.2);">
+              <div style="flex: none; width: 60px; height: 60px; border-radius: 20px; background: color-mix(in srgb, var(--accent) 18%, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #111317;">AB</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 18px; font-weight: 800; color: #111317; letter-spacing: -0.4px;">Ama Boateng</div>
+                <div style="font-size: 12.5px; font-weight: 500; color: #84888f; margin-top: 2px;">East Legon, Accra · Member since 2024</div>
+                <div style="display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; background: color-mix(in srgb, var(--accent) 14%, #ffffff); border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent); padding: 4px 9px; border-radius: 8px;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#111317" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                  <span style="font-size: 10.5px; font-weight: 800; color: #111317;">Verified · TrustScore 92</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <sc-for list="{{ profileRows }}" as="r" hint-placeholder-count="5">
+                <button onClick="{{ r.onTap }}" style="display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; border: none; background: #ffffff; border-radius: 14px; padding: 14px; cursor: pointer; box-shadow: 0 4px 16px -12px rgba(17,19,23,0.18); transition: transform 0.12s ease;" style-active="transform: scale(0.985);">
+                  <div style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 14%, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 15px;">{{ r.glyph }}</div>
+                  <span style="flex: 1; font-size: 14px; font-weight: 700; color: #111317;">{{ r.label }}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4c7cc" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+      <!-- ===== CREATE LISTING OVERLAY ===== -->
+      <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}">
+        <div class="nb-sheet" style="--accent: {{ createAccent }}; --accent-text: {{ createAccentText }}; position: absolute; inset: 0; z-index: 30; background: #f6f6f4; display: flex; flex-direction: column;">
+          <!-- top bar -->
+          <div style="flex: none; background: #ffffff; padding: 50px 18px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 0 rgba(17,19,23,0.06);">
+            <button onClick="{{ onCloseOverlay }}" style="flex: none; width: 36px; height: 36px; border: none; border-radius: 11px; background: #f3f3f1; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3a3d44" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+            <span style="font-size: 17px; font-weight: 800; color: #111317; letter-spacing: -0.4px;">Create listing</span>
+          </div>
+
+          <!-- scrollable form -->
+          <div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 18px 20px 120px;">
+            <!-- type selector -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin-bottom: 9px;">WHAT ARE YOU POSTING?</div>
+            <div style="position: relative; display: flex; background: #eeeeec; border-radius: 16px; padding: 5px;">
+              <div style="position: absolute; top: 5px; left: 5px; bottom: 5px; width: calc((100% - 10px) / 3); background: var(--accent); border-radius: 12px; box-shadow: 0 4px 12px -2px rgba(17,19,23,0.25); transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), background 0.25s ease; transform: translateX({{ createPillX }});"></div>
+              <button onClick="{{ onTypeShop }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; cursor: pointer; color: {{ ctShopTxt }};">ITEM</button>
+              <button onClick="{{ onTypeServices }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; cursor: pointer; color: {{ ctServicesTxt }};">SERVICE</button>
+              <button onClick="{{ onTypeRent }}" style="position: relative; z-index: 2; flex: 1; border: none; background: transparent; padding: 11px 0; font-family: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; cursor: pointer; color: {{ ctRentTxt }};">RENTAL</button>
+            </div>
+            <div style="font-size: 12px; font-weight: 600; color: #9a9ea6; margin-top: 8px;">{{ createTypeLabel }}</div>
+
+            <!-- photos -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin: 20px 0 9px;">PHOTOS</div>
+            <button onClick="{{ onAddPhotos }}" style="width: 100%; border: 2px dashed #cfcfca; background: #fbfbf9; border-radius: 18px; padding: 26px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;">
+              <div style="width: 44px; height: 44px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 16%, #ffffff); display: flex; align-items: center; justify-content: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111317" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="8.5" cy="10" r="1.6"/><path d="m4 18 5-5 4 3 3-2 4 4"/></svg>
+              </div>
+              <span style="font-size: 13px; font-weight: 700; color: #4a4d54;">Add photos</span>
+              <span style="font-size: 11px; font-weight: 500; color: #9a9ea6;">Up to 8 · first is the cover</span>
+            </button>
+
+            <!-- title -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin: 20px 0 9px;">TITLE</div>
+            <input class="nb-search" value="{{ titleVal }}" onInput="{{ onTitleInput }}" placeholder="{{ titlePlaceholder }}" style="width: 100%; border: none; outline: none; background: #ffffff; border-radius: 14px; padding: 14px; font-family: inherit; font-size: 14px; font-weight: 600; color: #111317; box-shadow: 0 1px 0 rgba(17,19,23,0.04);" />
+
+            <!-- price -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin: 18px 0 9px;">PRICE (GHS)</div>
+            <div style="display: flex; align-items: center; gap: 10px; background: #ffffff; border-radius: 14px; padding: 0 14px; box-shadow: 0 1px 0 rgba(17,19,23,0.04);">
+              <span style="font-size: 14px; font-weight: 800; color: #9a9ea6;">GHS</span>
+              <input class="nb-search" value="{{ priceVal }}" onInput="{{ onPriceInput }}" placeholder="{{ pricePlaceholder }}" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 14px 0; font-family: inherit; font-size: 14px; font-weight: 600; color: #111317;" />
+            </div>
+
+            <!-- category + location rows -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin: 18px 0 9px;">DETAILS</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <button onClick="{{ onPickCategory }}" style="display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: none; background: #ffffff; border-radius: 14px; padding: 14px; cursor: pointer; box-shadow: 0 1px 0 rgba(17,19,23,0.04);">
+                <span style="font-size: 16px;">🏷️</span>
+                <span style="flex: 1; font-size: 14px; font-weight: 700; color: #111317;">Category</span>
+                <span style="font-size: 12.5px; font-weight: 600; color: #9a9ea6;">Choose</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4c7cc" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+              </button>
+              <div style="display: flex; align-items: center; gap: 12px; width: 100%; background: #ffffff; border-radius: 14px; padding: 14px; box-shadow: 0 1px 0 rgba(17,19,23,0.04);">
+                <span style="font-size: 16px;">📍</span>
+                <span style="flex: 1; font-size: 14px; font-weight: 700; color: #111317;">Location</span>
+                <span style="font-size: 12.5px; font-weight: 600; color: #4a4d54;">East Legon</span>
+              </div>
+            </div>
+
+            <!-- description -->
+            <div style="font-size: 12.5px; font-weight: 800; color: #84888f; letter-spacing: 0.2px; margin: 18px 0 9px;">DESCRIPTION</div>
+            <textarea class="nb-search" value="{{ descVal }}" onInput="{{ onDescInput }}" placeholder="Condition, details, what's included…" style="width: 100%; min-height: 92px; resize: none; border: none; outline: none; background: #ffffff; border-radius: 14px; padding: 14px; font-family: inherit; font-size: 14px; font-weight: 500; color: #111317; box-shadow: 0 1px 0 rgba(17,19,23,0.04);"></textarea>
+          </div>
+
+          <!-- post footer -->
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #ffffff; padding: 14px 20px 28px; box-shadow: 0 -1px 0 rgba(17,19,23,0.06);">
+            <button onClick="{{ onPost }}" style="width: 100%; border: none; background: var(--accent); color: var(--accent-text); font-family: inherit; font-size: 15px; font-weight: 800; padding: 15px 0; border-radius: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.12s ease;" style-active="transform: scale(0.98);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+              <span>Post listing</span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== MY LISTINGS OVERLAY ===== -->
+      <sc-if value="{{ isListings }}" hint-placeholder-val="{{ false }}">
+        <div class="nb-sheet" style="--accent: #CCFF00; --accent-text: #1A1A1A; position: absolute; inset: 0; z-index: 30; background: #f6f6f4; display: flex; flex-direction: column;">
+          <!-- top bar -->
+          <div style="flex: none; background: #ffffff; padding: 50px 18px 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 0 rgba(17,19,23,0.06);">
+            <button onClick="{{ onCloseOverlay }}" style="flex: none; width: 36px; height: 36px; border: none; border-radius: 11px; background: #f3f3f1; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3a3d44" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <span style="flex: 1; font-size: 17px; font-weight: 800; color: #111317; letter-spacing: -0.4px;">My listings</span>
+            <span style="font-size: 12.5px; font-weight: 700; color: #9a9ea6;">{{ listingCount }} active</span>
+          </div>
+
+          <!-- scroll -->
+          <div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 16px 20px 40px;">
+            <button onClick="{{ onCreate }}" style="width: 100%; border: none; background: var(--accent); color: var(--accent-text); font-family: inherit; font-size: 14px; font-weight: 800; padding: 14px 0; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 18px; transition: transform 0.12s ease;" style-active="transform: scale(0.98);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>New listing</span>
+            </button>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <sc-for list="{{ listings }}" as="l" hint-placeholder-count="3">
+                <div style="background: #ffffff; border-radius: 18px; padding: 14px; box-shadow: 0 6px 22px -14px rgba(17,19,23,0.2);">
+                  <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="flex: none; width: 52px; height: 52px; border-radius: 13px; background-image: repeating-linear-gradient(135deg, #ededea 0 10px, #f4f4f1 10px 20px);"></div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="display: flex; align-items: center; gap: 7px;">
+                        <span style="font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px; color: #111317; padding: 3px 7px; border-radius: 7px; background: color-mix(in srgb, {{ l.typeAccent }} 16%, #ffffff); border: 1px solid color-mix(in srgb, {{ l.typeAccent }} 45%, transparent);">{{ l.typeLabel }}</span>
+                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; color: {{ l.statusColor }};">
+                          <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ l.statusColor }};"></span>{{ l.status }}
+                        </span>
+                      </div>
+                      <div style="font-size: 14.5px; font-weight: 800; color: #111317; letter-spacing: -0.3px; margin-top: 6px;">{{ l.title }}</div>
+                      <div style="font-size: 13px; font-weight: 700; color: #4a4d54; margin-top: 2px;">{{ l.price }}</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 14px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0ed;">
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #84888f;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2.2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      {{ l.views }} views
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #84888f;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9a9ea6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+                      {{ l.chats }} chats
+                    </span>
+                    <div style="flex: 1;"></div>
+                    <button onClick="{{ l.onToggle }}" style="border: none; background: #f3f3f1; color: #4a4d54; font-family: inherit; font-size: 11.5px; font-weight: 800; padding: 7px 12px; border-radius: 10px; cursor: pointer;">{{ l.toggleLabel }}</button>
+                    <button onClick="{{ l.onEdit }}" style="border: none; background: #15171c; color: #ffffff; font-family: inherit; font-size: 11.5px; font-weight: 800; padding: 7px 12px; border-radius: 10px; cursor: pointer;">Edit</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- TOAST -->
+      <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+        <div class="nb-toast" style="position: absolute; left: 20px; right: 20px; bottom: 98px; z-index: 40; display: flex; align-items: center; gap: 11px; background: #15171c; border-radius: 15px; padding: 13px 16px; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.5);">
+          <div style="flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+          </div>
+          <span style="font-size: 13px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px;">{{ toast }}</span>
+        </div>
+      </sc-if>
+
+      <!-- BOTTOM NAV -->
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 6; background: rgba(255,255,255,0.92); backdrop-filter: blur(18px); border-top: 1px solid rgba(17,19,23,0.06); padding: 9px 14px 24px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+          <button onClick="{{ onHome }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; border: none; background: transparent; cursor: pointer; padding: 4px 0; font-family: inherit; color: {{ homeColor }};">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1px;">Home</span>
+          </button>
+          <button onClick="{{ onChat }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; border: none; background: transparent; cursor: pointer; padding: 4px 0; font-family: inherit; color: {{ chatColor }};">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1px;">Chat</span>
+          </button>
+          <button onClick="{{ onCreate }}" style="flex: 1; display: flex; align-items: center; justify-content: center; border: none; background: transparent; cursor: pointer; padding: 0;">
+            <div style="margin-top: -4px; width: 56px; height: 56px; border-radius: 19px; background: var(--accent, #CCFF00); color: var(--accent-text, #1A1A1A); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 22px -6px color-mix(in srgb, var(--accent, #CCFF00) 70%, transparent), 0 2px 6px rgba(0,0,0,0.18); transition: background 0.25s ease, color 0.25s ease, transform 0.12s ease;" style-active="transform: scale(0.93);">
+              <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </button>
+          <button onClick="{{ onWallet }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; border: none; background: transparent; cursor: pointer; padding: 4px 0; font-family: inherit; color: {{ walletColor }};">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1px;">Wallet</span>
+          </button>
+          <button onClick="{{ onProfile }}" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; border: none; background: transparent; cursor: pointer; padding: 4px 0; font-family: inherit; color: {{ profileColor }};">
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-5.5 8-5.5s8 2.2 8 5.5"/></svg>
+            <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.1px;">Profile</span>
+          </button>
+        </div>
+        <div style="width: 130px; height: 5px; border-radius: 3px; background: #111317; opacity: 0.85; margin: 8px auto 0;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 392, "height": 844}}'>
+class Component extends DCLogic {
+  state = {
+    mode: 'shop', tab: 'home', query: '', toast: null,
+    view: null,            // null | 'create' | 'listings'  (full-screen overlays)
+    createType: 'shop',    // which kind of listing is being posted
+    form: { title: '', price: '', desc: '' },
+    listings: [
+      { title: 'iPhone 13 Pro', type: 'shop', price: 'GHS 4,200', status: 'Active', views: 128, chats: 6 },
+      { title: 'AC Repair Technician', type: 'services', price: 'GHS 120 /visit', status: 'Active', views: 64, chats: 3 },
+      { title: '25kVA Generator', type: 'rent', price: 'GHS 450 /day', status: 'Paused', views: 39, chats: 1 },
+    ],
+  };
+
+  searchRef = React.createRef();
+
+  themes = {
+    shop:     { accent: '#CCFF00', text: '#1A1A1A', cta: 'Buy Now',  searchHint: 'Search goods near you…', promoTitle: 'Verified sellers, escrow-protected', promoSub: 'Pay safely — funds held until you confirm', toast: 'Added to cart' },
+    services: { accent: '#008080', text: '#FFFFFF', cta: 'Book Slot', searchHint: 'Search services near you…', promoTitle: 'Book trusted local pros', promoSub: 'Real-time slots · same-day availability', toast: 'Slot requested' },
+    rent:     { accent: '#9B5DE5', text: '#FFFFFF', cta: 'Rent Now',  searchHint: 'Search rentals near you…', promoTitle: 'Rent by the hour, day or week', promoSub: 'Deposits auto-released on confirmed return', toast: 'Rental requested' },
+  };
+
+  data = {
+    shop: [
+      { title: 'iPhone 13 Pro', price: 'GHS 4,200', unit: '', meta: 'Graphite · 256GB · Used — Good', trust: 'Gold', imgLabel: 'product · iPhone 13 Pro', tags: ['Electronics', 'Negotiable', 'Verified seller'] },
+      { title: 'Fresh Yam Tubers', price: 'GHS 35', unit: '/tuber', meta: 'Farm produce · from Techiman', trust: 'Silver', imgLabel: 'product · yam tubers', tags: ['Farm produce', 'Bulk available'] },
+      { title: "Nike Air Force 1", price: 'GHS 520', unit: '', meta: 'Size 43 · Brand new · Sealed', trust: 'Platinum', imgLabel: 'product · sneakers', tags: ['Fashion', 'Free delivery'] },
+    ],
+    services: [
+      { title: 'AC Repair Technician', price: 'GHS 120', unit: '/visit', meta: 'Kwame A. · ★ 4.9 (213 jobs)', trust: 'Gold', imgLabel: 'provider · AC technician', tags: ['Same-day', 'Insured work', 'Verified'] },
+      { title: 'WASSCE Math Tutor', price: 'GHS 50', unit: '/hr', meta: 'Ama O. · ★ 5.0 (88 students)', trust: 'Platinum', imgLabel: 'provider · math tutor', tags: ['Online or in-person', 'Verified'] },
+      { title: 'Home Deep Cleaning', price: 'GHS 180', unit: '/session', meta: 'SparkleCo · ★ 4.8 (140 jobs)', trust: 'Gold', imgLabel: 'provider · cleaning team', tags: ['Team of 3', 'Insured'] },
+    ],
+    rent: [
+      { title: 'Soundsystem / DJ Set', price: 'GHS 800', unit: '/day', meta: '2.4kW · mixer & 2 speakers incl.', trust: 'Gold', imgLabel: 'rental · DJ soundsystem', tags: ['Deposit GHS 500', 'Delivery'] },
+      { title: '25kVA Generator', price: 'GHS 450', unit: '/day', meta: 'Diesel · silent canopy · operator opt.', trust: 'Platinum', imgLabel: 'rental · generator', tags: ['Operator opt.', 'Insured'] },
+      { title: 'Canon R6 Camera Kit', price: 'GHS 220', unit: '/day', meta: 'Body + 2 lenses · hourly available', trust: 'Silver', imgLabel: 'rental · DSLR camera kit', tags: ['Hourly avail.', 'Deposit GHS 800'] },
+    ],
+  };
+
+  chat = [
+    { initial: 'K', name: 'Kwame A.', last: 'On my way — should be there by 2pm 🚗', time: 'now', unread: true },
+    { initial: 'S', name: 'SparkleCo', last: 'Your deep-clean is confirmed for Sat.', time: '12m', unread: true },
+    { initial: 'M', name: 'Mensah Rentals', last: 'Generator deposit received, thanks!', time: '1h', unread: false },
+    { initial: 'A', name: 'Ama O. (Tutor)', last: 'See you at the next session.', time: 'Tue', unread: false },
+  ];
+
+  txns = [
+    { label: 'Top-up · Mobile Money', sub: 'MTN MoMo · Today', amount: '+ GHS 500', dir: 'in' },
+    { label: 'AC Repair Technician', sub: 'Escrow held · Today', amount: '− GHS 120', dir: 'out' },
+    { label: 'Generator deposit', sub: 'Refundable · Yesterday', amount: '− GHS 500', dir: 'out' },
+  ];
+
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ toast: null }), 2200);
+  }
+
+  selectTab(tab) {
+    this.setState({ tab });
+    if (tab === 'search') {
+      setTimeout(() => { if (this.searchRef.current) this.searchRef.current.focus(); }, 60);
+    }
+  }
+
+  openCreate() { this.setState({ view: 'create' }); }
+  openListings() { this.setState({ view: 'listings' }); }
+  closeOverlay() { this.setState({ view: null }); }
+
+  postListing() {
+    const f = this.state.form;
+    const ct = this.state.createType;
+    const item = {
+      title: (f.title || '').trim() || 'Untitled listing',
+      type: ct,
+      price: f.price ? ('GHS ' + f.price) : 'GHS —',
+      status: 'Active',
+      views: 0, chats: 0,
+    };
+    this.setState({
+      listings: [item, ...this.state.listings],
+      form: { title: '', price: '', desc: '' },
+      view: 'listings',
+    });
+    this.showToast('Listing posted');
+  }
+
+  toggleListing(i) {
+    const listings = this.state.listings.map((l, idx) =>
+      idx === i ? { ...l, status: l.status === 'Active' ? 'Paused' : 'Active' } : l);
+    this.setState({ listings });
+    this.showToast(listings[i].status === 'Active' ? 'Listing reactivated' : 'Listing paused');
+  }
+
+  renderVals() {
+    const m = this.state.mode;
+    const t = this.themes[m];
+    const tab = this.state.tab;
+    const q = this.state.query.trim().toLowerCase();
+    const idx = { shop: 0, services: 1, rent: 2 }[m];
+
+    const all = this.data[m];
+    const cards = (q
+      ? all.filter(c => (c.title + ' ' + c.meta + ' ' + c.tags.join(' ')).toLowerCase().includes(q))
+      : all
+    ).map(c => ({ ...c, onCta: () => this.showToast(`${t.toast} · ${c.title}`) }));
+
+    // create-listing flow locals
+    const ct = this.themes[this.state.createType];
+    const ctIdx = { shop: 0, services: 1, rent: 2 }[this.state.createType];
+    const ctMeta = {
+      shop:     { label: 'Item for sale',   titlePh: 'e.g. iPhone 13 Pro',         pricePh: '4,200' },
+      services: { label: 'Service offered', titlePh: 'e.g. AC Repair Technician',  pricePh: '120 per visit' },
+      rent:     { label: 'Item for rent',   titlePh: 'e.g. 25kVA Generator',       pricePh: '450 per day' },
+    }[this.state.createType];
+
+    const isSearching = q.length > 0;
+    const showFeed = tab === 'home';
+
+    // Header (brand + mode selector + search) only shows on Home.
+    const showHeader = tab === 'home';
+    // Chat / Wallet / Profile lock the accent to the brand green for a calmer, roomier screen.
+    const eff = showHeader ? t : this.themes.shop;
+
+    // Use resolved hex (not var(--accent)) so CSS color transitions interpolate between concrete colors.
+    const navColor = (key) => (tab === key ? eff.accent : '#9ca3af');
+    const segTxt = (key) => (m === key ? t.text : '#83878e');
+
+    return {
+      mode: m,
+      showHeader,
+      accent: eff.accent,
+      accentText: eff.text,
+      cta: t.cta,
+      searchHint: t.searchHint,
+      promoTitle: t.promoTitle,
+      promoSub: t.promoSub,
+      cards,
+      pillX: `calc(${idx} * 100%)`,
+      feedKey: m + '|' + tab + '|' + (isSearching ? 'q' : 'all'),
+
+      // search
+      query: this.state.query,
+      searchRef: this.searchRef,
+      isSearching,
+      onQueryInput: (e) => this.setState({ query: e.target.value }),
+      onClearSearch: () => { this.setState({ query: '' }); if (this.searchRef.current) this.searchRef.current.focus(); },
+
+      // feed framing
+      showFeed,
+      showPromo: showFeed && !isSearching,
+      sectionLabel: isSearching ? 'Results' : 'Popular near you',
+      sectionRight: isSearching ? `${cards.length} found` : 'See all',
+      noResults: showFeed && isSearching && cards.length === 0,
+
+      // toast + misc actions
+      toast: this.state.toast,
+      onExplore: () => this.showToast('Exploring ' + m.charAt(0).toUpperCase() + m.slice(1)),
+      onBell: () => this.showToast('No new notifications'),
+      onTopUp: () => this.showToast('Top-up started'),
+      onWithdraw: () => this.showToast('Withdrawal requested'),
+
+      // mode selector
+      onShop: () => this.setState({ mode: 'shop' }),
+      onServices: () => this.setState({ mode: 'services' }),
+      onRent: () => this.setState({ mode: 'rent' }),
+      shopTxt: segTxt('shop'),
+      servicesTxt: segTxt('services'),
+      rentTxt: segTxt('rent'),
+
+      // bottom nav
+      onHome: () => this.selectTab('home'),
+      onChat: () => this.selectTab('chat'),
+      onWallet: () => this.selectTab('wallet'),
+      onProfile: () => this.selectTab('profile'),
+      homeColor: navColor('home'),
+      chatColor: navColor('chat'),
+      walletColor: navColor('wallet'),
+      profileColor: navColor('profile'),
+
+      // tab screens
+      isChat: tab === 'chat',
+      isWallet: tab === 'wallet',
+      isProfile: tab === 'profile',
+      chatThreads: this.chat.map(c => ({ ...c, onOpen: () => this.showToast('Opening chat · ' + c.name) })),
+      walletTxns: this.txns.map(x => ({
+        label: x.label, sub: x.sub, amount: x.amount,
+        amtColor: x.dir === 'in' ? '#0a7d3d' : '#111317',
+        arrow: x.dir === 'in' ? 'rotate(180 12 14)' : '',
+      })),
+      profileRows: [
+        { glyph: '📦', label: 'My orders & bookings', onTap: () => this.showToast('Orders') },
+        { glyph: '🏷️', label: 'My listings', onTap: () => this.openListings() },
+        { glyph: '⭐', label: 'Reviews & TrustScore', onTap: () => this.showToast('Reviews') },
+        { glyph: '💳', label: 'Payment methods', onTap: () => this.showToast('Payments') },
+        { glyph: '⚙️', label: 'Settings', onTap: () => this.showToast('Settings') },
+      ],
+
+      // ===== Sell / create-listing flow =====
+      onCreate: () => this.openCreate(),
+      onCloseOverlay: () => this.closeOverlay(),
+      onPost: () => this.postListing(),
+      onAddPhotos: () => this.showToast('Add photos'),
+      onPickCategory: () => this.showToast('Choose category'),
+
+      // create overlay
+      isCreate: this.state.view === 'create',
+      createAccent: ct.accent,
+      createAccentText: ct.text,
+      createPillX: `calc(${ctIdx} * 100%)`,
+      createTypeLabel: ctMeta.label,
+      titlePlaceholder: ctMeta.titlePh,
+      pricePlaceholder: ctMeta.pricePh,
+      ctShopTxt: this.state.createType === 'shop' ? this.themes.shop.text : '#83878e',
+      ctServicesTxt: this.state.createType === 'services' ? this.themes.services.text : '#83878e',
+      ctRentTxt: this.state.createType === 'rent' ? this.themes.rent.text : '#83878e',
+      onTypeShop: () => this.setState({ createType: 'shop' }),
+      onTypeServices: () => this.setState({ createType: 'services' }),
+      onTypeRent: () => this.setState({ createType: 'rent' }),
+      titleVal: this.state.form.title,
+      priceVal: this.state.form.price,
+      descVal: this.state.form.desc,
+      onTitleInput: (e) => this.setState({ form: { ...this.state.form, title: e.target.value } }),
+      onPriceInput: (e) => this.setState({ form: { ...this.state.form, price: e.target.value } }),
+      onDescInput: (e) => this.setState({ form: { ...this.state.form, desc: e.target.value } }),
+
+      // my-listings overlay
+      isListings: this.state.view === 'listings',
+      listingCount: this.state.listings.length,
+      listings: this.state.listings.map((l, i) => ({
+        title: l.title,
+        price: l.price,
+        views: l.views,
+        chats: l.chats,
+        status: l.status,
+        isActive: l.status === 'Active',
+        toggleLabel: l.status === 'Active' ? 'Pause' : 'Activate',
+        statusColor: l.status === 'Active' ? '#0a7d3d' : '#9a9ea6',
+        typeLabel: { shop: 'Shop', services: 'Services', rent: 'Rent' }[l.type],
+        typeAccent: this.themes[l.type].accent,
+        onToggle: () => this.toggleListing(i),
+        onEdit: () => this.showToast('Editing · ' + l.title),
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>
