@@ -1,42 +1,20 @@
--- Sample users
-INSERT INTO users (full_name, email, password_hash, phone, trust_score) VALUES
-    ('Kofi Mensah',  'kofi@nearbuy.com',  'hashed123', '0244000001', 720),
-    ('Ama Asante',   'ama@nearbuy.com',   'hashed123', '0244000002', 580),
-    ('Kwame Darko',  'kwame@nearbuy.com', 'hashed123', '0244000003', 310);
+-- Demo Users
+INSERT INTO users (full_name, email, phone, password_hash, trust_score, id_verified)
+VALUES
+('Ama Boateng','ama@example.com','+233200000001','hashed_pw1',92,TRUE),
+('Kwame Asante','kwame@example.com','+233200000002','hashed_pw2',85,FALSE),
+('Mensah Ofori','mensah@example.com','+233200000003','hashed_pw3',70,FALSE);
 
--- Sample listings
-INSERT INTO listings (user_id, type, title, description, price) VALUES
-    (1, 'GOOD',    'Samsung Galaxy A54 — Like New',
-                   '6 months old, no scratches, full box',       850.00),
-    (1, 'SERVICE', 'Professional Graphic Design',
-                   'Logo, flyer, and branding. 3-day delivery',  120.00),
-    (2, 'RENTAL',  'Generator 3.5kVA — Daily Hire',
-                   'Reliable, fuel not included',                  80.00),
-    (2, 'GOOD',    'HP Laptop i5 8th Gen',
-                   'Windows 11, 8GB RAM, 256GB SSD',            1200.00),
-    (3, 'SERVICE', 'Home Plumbing Repair',
-                   'Same-day service, all of Kumasi',              60.00),
-    (3, 'RENTAL',  'DJ Sound System — Event Hire',
-                   'Full PA system, weekend rates available',     200.00),
-    (1, 'GOOD',    'Brand New Blender — Nunix',
-                   'Still in box, unused',                         75.00),
-    (2, 'SERVICE', 'Maths & Science Tutoring',
-                   'SHS and JHS. Home visits available',           40.00),
-    (3, 'RENTAL',  'Canon EOS Camera — Daily Hire',
-                   'With 18-55mm lens and memory card',           100.00),
-    (1, 'SERVICE', 'Car Washing & Detailing',
-                   'Come to your location in Kumasi',              30.00);
+-- Demo Listings
+INSERT INTO listings (user_id, type, title, description, price, status, image_url, views)
+VALUES
+(1,'GOOD','Used iPhone 12','Slightly used, 128GB',3500,'ACTIVE','/images/iphone.jpg',12),
+(2,'SERVICE','AC Repair Service','Fast and reliable repairs',120,'ACTIVE','/images/ac.jpg',5),
+(3,'RENTAL','Generator Rental','5kVA generator, daily rate',500,'ACTIVE','/images/gen.jpg',8);
 
--- Sample messages
-INSERT INTO messages (sender_id, receiver_id, listing_id, body) VALUES
-    (2, 1, 1, 'Hi Kofi, is the Samsung still available?'),
-    (1, 2, 1, 'Yes, still available! When do you want to see it?'),
-    (2, 1, 1, 'Can we meet tomorrow around 10am?'),
-    (3, 2, 4, 'Is the laptop negotiable?'),
-    (2, 3, 4, 'I can do 1100 if you pay today.');
-
--- Sample orders
-INSERT INTO orders (listing_id, buyer_id, seller_id, amount, status) VALUES
-    (3, 1, 2, 80.00, 'PAID');
-Add PostgreSQL schema.sql
-
+-- Demo Wallet Transactions
+INSERT INTO wallet_transactions (user_id,type,amount,reference,balance_after)
+VALUES
+(1,'CREDIT',500,'Top-up',500),
+(2,'DEBIT',120,'AC repair escrow',380),
+(3,'DEBIT',500,'Generator deposit',200);
