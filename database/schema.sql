@@ -1,97 +1,110 @@
--- Nearbuy Database Schema
+-- ==========================================
+-- EXTENSIONS & ENUMS
+-- ==========================================
+CREATE TYPE listing_type AS ENUM ('GOOD', 'SERVICE', 'RENTAL');
+CREATE TYPE listing_status AS ENUM ('ACTIVE', 'PAUSED');
+CREATE TYPE order_status AS ENUM ('PENDING', 'PAID', 'COMPLETED');
+CREATE TYPE transaction_type AS ENUM ('CREDIT', 'DEBIT');
 
--- Users table
+-- ==========================================
+-- TABLES DEFINITIONS
+-- ==========================================
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    phone VARCHAR(20) UNIQUE,
-    password_hash TEXT NOT NULL,
-    trust_score INT DEFAULT 100,
+    phone VARCHAR(20) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    trust_score INT DEFAULT 100 CHECK (trust_score BETWEEN 0 AND 100),
     id_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Listings table
 CREATE TABLE listings (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(20) CHECK (type IN ('GOOD','SERVICE','RENTAL')),
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    price NUMERIC(12,2) CHECK (price >= 0),
-    status VARCHAR(20) CHECK (status IN ('ACTIVE','PAUSED')),
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type listing_type NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    price NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
+    status listing_status DEFAULT 'ACTIVE',
     image_url TEXT,
-    lat NUMERIC(9,6),
-    lng NUMERIC(9,6),
-    views INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    lat NUMERIC(9, 6),
+    lng NUMERIC(9, 6),
+    views INT DEFAULT 0 CHECK (views >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_listings_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- Rental details
 CREATE TABLE rental_details (
-    listing_id INT PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
-    deposit_amount NUMERIC(12,2),
-    min_duration INT,
-    max_duration INT,
-    return_condition_photos TEXT
+    listing_id BIGINT PRIMARY KEY,
+    deposit_amount NUMERIC(12, 2) NOT NULL CHECK (deposit_amount >= 0),
+    min_duration INT DEFAULT 1 CHECK (min_duration > 0),
+    max_duration INT CHECK (max_duration >= min_duration),
+    return_condition_photos TEXT[], 
+    CONSTRAINT fk_rental_details_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
 );
 
--- Messages
 CREATE TABLE messages (
-    id SERIAL PRIMARY KEY,
-    listing_id INT REFERENCES listings(id) ON DELETE CASCADE,
-    sender_id INT REFERENCES users(id) ON DELETE CASCADE,
-    receiver_id INT REFERENCES users(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    listing_id BIGINT NOT NULL,
+    sender_id BIGINT NOT NULL,
+    receiver_id BIGINT NOT NULL,
     body TEXT NOT NULL,
     is_flagged BOOLEAN DEFAULT FALSE,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_messages_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_messages_receiver FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- Orders
 CREATE TABLE orders (
-    id SERIAL PRIMARY KEY,
-    listing_id INT REFERENCES listings(id) ON DELETE CASCADE,
-    buyer_id INT REFERENCES users(id),
-    seller_id INT REFERENCES users(id),
-    amount NUMERIC(12,2) NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('PENDING','PAID','COMPLETED')),
-    escrow_amount NUMERIC(12,2),
-    paid_at TIMESTAMP,
-    released_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id BIGSERIAL PRIMARY KEY,
+    listing_id BIGINT NOT NULL,
+    buyer_id BIGINT NOT NULL,
+    seller_id BIGINT NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
+    status order_status DEFAULT 'PENDING',
+    escrow_amount NUMERIC(12, 2) DEFAULT 0.00 CHECK (escrow_amount >= 0),
+    paid_at TIMESTAMP WITH TIME ZONE,
+    released_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_orders_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_orders_buyer FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_orders_seller FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- Wallet transactions
 CREATE TABLE wallet_transactions (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    type VARCHAR(10) CHECK (type IN ('CREDIT','DEBIT')),
-    amount NUMERIC(12,2) NOT NULL,
-    reference VARCHAR(100),
-    balance_after NUMERIC(12,2),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type transaction_type NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    reference VARCHAR(100) UNIQUE NOT NULL,
+    balance_after NUMERIC(12, 2) NOT NULL CHECK (balance_after >= 0),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- Reviews
 CREATE TABLE reviews (
-    id SERIAL PRIMARY KEY,
-    order_id INT REFERENCES orders(id),
-    reviewer_id INT REFERENCES users(id),
-    reviewee_id INT REFERENCES users(id),
-    rating INT CHECK (rating BETWEEN 1 AND 5),
+    id BIGSERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL UNIQUE,
+    reviewer_id BIGINT NOT NULL,
+    reviewee_id BIGINT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     body TEXT,
-    verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    verified BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_reviewer FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_reviews_reviewee FOREIGN KEY (reviewee_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
--- Indexes
-CREATE INDEX idx_listings_type ON listings(type);
-CREATE INDEX idx_listings_status ON listings(status);
-CREATE INDEX idx_listings_search ON listings USING gin(to_tsvector('english', title || ' ' || description));
-CREATE INDEX idx_messages_listing ON messages(listing_id);
-CREATE INDEX idx_orders_buyer ON orders(buyer_id);
-CREATE INDEX idx_orders_seller ON orders(seller_id);
-CREATE INDEX idx_listings_user ON listings(user_id);
-CREATE INDEX idx_wallet_user ON wallet_transactions(user_id);
-Add database schema and seed data
+-- ==========================================
+-- INDEXES FOR PERFORMANCE
+-- ==========================================
+CREATE INDEX idx_listings_type_status ON listings(type, status);
+CREATE INDEX idx_listings_search_gin ON listings USING gin(to_tsvector('english', title || ' ' || description));
+CREATE INDEX idx_messages_listing_id ON messages(listing_id);
+CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);
+CREATE INDEX idx_orders_seller_id ON orders(seller_id);
+CREATE INDEX idx_wallet_tx_user_id ON wallet_transactions(user_id);
