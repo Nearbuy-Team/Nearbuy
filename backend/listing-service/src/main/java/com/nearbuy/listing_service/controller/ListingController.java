@@ -51,24 +51,30 @@ public class ListingController {
     public ResponseEntity<List<Listing>> searchListings(@RequestParam String q) {
         return ResponseEntity.ok(listingService.searchListings(q));
     }
-    public Listing updateStatus(Long listingId, Listing.ListingStatus newStatus, Long sellerId) {
-        Listing listing = getListingById(listingId);
-
-        if (!listing.getSellerId().equals(sellerId)) {
-            throw new SecurityException("You do not own this listing");
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id,
+                                           @RequestBody Listing.ListingStatus status,
+                                           @RequestHeader("X-User-Id") Long sellerId) {
+        try {
+            Listing updated = listingService.updateStatus(id, status, sellerId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
-
-        listing.setStatus(newStatus);
-        return listingRepository.save(listing);
     }
 
-    public void deleteListing(Long listingId, Long sellerId) {
-        Listing listing = getListingById(listingId);
-
-        if (!listing.getSellerId().equals(sellerId)) {
-            throw new SecurityException("You do not own this listing");
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteListing(@PathVariable Long id,
+                                            @RequestHeader("X-User-Id") Long sellerId) {
+        try {
+            listingService.deleteListing(id, sellerId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
-
-        listingRepository.delete(listing);
     }
 }
