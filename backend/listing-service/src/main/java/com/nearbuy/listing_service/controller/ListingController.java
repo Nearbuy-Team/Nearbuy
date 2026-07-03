@@ -51,4 +51,24 @@ public class ListingController {
     public ResponseEntity<List<Listing>> searchListings(@RequestParam String q) {
         return ResponseEntity.ok(listingService.searchListings(q));
     }
+    public Listing updateStatus(Long listingId, Listing.ListingStatus newStatus, Long sellerId) {
+        Listing listing = getListingById(listingId);
+
+        if (!listing.getSellerId().equals(sellerId)) {
+            throw new SecurityException("You do not own this listing");
+        }
+
+        listing.setStatus(newStatus);
+        return listingRepository.save(listing);
+    }
+
+    public void deleteListing(Long listingId, Long sellerId) {
+        Listing listing = getListingById(listingId);
+
+        if (!listing.getSellerId().equals(sellerId)) {
+            throw new SecurityException("You do not own this listing");
+        }
+
+        listingRepository.delete(listing);
+    }
 }
