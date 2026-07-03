@@ -44,7 +44,9 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
-                public Long extractUserId(String token) {
+    }
+
+    public Long extractUserId(String token) {
         Object userId = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
@@ -52,7 +54,6 @@ public class JwtUtil {
                 .getPayload()
                 .get("userId");
         return Long.valueOf(userId.toString());
-    }
     }
 
     public boolean isTokenValid(String token) {
