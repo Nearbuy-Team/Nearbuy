@@ -18,7 +18,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public boolean isTokenValid(String token) {
+   public boolean isTokenValid(String token) {
         try {
             Jwts.parser()
                     .verifyWith(getSigningKey())
