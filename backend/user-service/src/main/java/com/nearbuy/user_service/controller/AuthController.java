@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.nearbuy.user_service.dto.VerifyOtpRequest;
 import com.nearbuy.user_service.dto.RequestPasswordResetRequest;
-import com.nearbuy,user_service.dto.ResetPasswordRequest;
+import com.nearbuy.user_service.dto.ResetPasswordRequest;
 
 @RestController
 @RequestMapping("/api/auth")
