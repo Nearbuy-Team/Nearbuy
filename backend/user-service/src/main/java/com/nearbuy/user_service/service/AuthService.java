@@ -8,6 +8,8 @@ import com.nearbuy.user_service.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 public class AuthService {
@@ -31,6 +33,38 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+
+        String otp = generateOtp();
+        user.setOtpCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+
+        User savedUser = userRepository.save(user);
+
+        System.out.println("OTP for " + savedUser.getEmail() + ": " + otp);
+
+        return savedUser;
+    }
+
+    private String generateOtp() {
+        int otp = 100000 + new Random().nextInt(900000);
+        return String.valueOf(otp);
+    }
+
+    public User verifyOtp(String email, String otpCode) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("OTP has expired");
+        }
+
+        user.setIdVerified(true);
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
 
         return userRepository.save(user);
     }
