@@ -69,6 +69,38 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String otp = generateOtp();
+        user.setOtpCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+
+        userRepository.save(user);
+
+        System.out.println("Password reset OTP for " + user.getEmail() + ": " + otp);
+    }
+
+    public void resetPassword(String email, String otpCode, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
+            throw new IllegalArgumentException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("OTP has expired");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+
+        userRepository.save(user);
+    }
+
     public String login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
