@@ -56,6 +56,32 @@ public class PaymentService {
         return order;
     }
 
+    public Order completeOrder(Long orderId, Long sellerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        if (!order.getSellerId().equals(sellerId)) {
+            throw new SecurityException("You are not the seller for this order");
+        }
+
+        if (order.getStatus() != Order.OrderStatus.PAID) {
+            throw new IllegalStateException("Order must be paid before it can be completed");
+        }
+
+        order.setStatus(Order.OrderStatus.COMPLETED);
+        orderRepository.save(order);
+
+        WalletTransaction release = new WalletTransaction();
+        release.setUserId(sellerId);
+        release.setOrderId(order.getId());
+        release.setType(WalletTransaction.TransactionType.ESCROW_RELEASE);
+        release.setAmount(order.getAmount());
+        release.setDescription("Escrow release for order #" + order.getId());
+        walletTransactionRepository.save(release);
+
+        return order;
+    }
+
     public List<Order> getMyPurchases(Long buyerId) {
         return orderRepository.findByBuyerId(buyerId);
     }

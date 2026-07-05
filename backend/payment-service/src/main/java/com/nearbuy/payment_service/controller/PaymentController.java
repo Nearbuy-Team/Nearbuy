@@ -44,6 +44,21 @@ public class PaymentController {
         }
     }
 
+    @PostMapping("/api/orders/{id}/complete")
+    public ResponseEntity<?> completeOrder(@PathVariable Long id,
+                                            @RequestHeader("X-User-Id") Long sellerId) {
+        try {
+            Order order = paymentService.completeOrder(id, sellerId);
+            return ResponseEntity.ok(order);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/api/orders/mine")
     public ResponseEntity<List<Order>> getMyOrders(@RequestHeader("X-User-Id") Long userId) {
         List<Order> purchases = paymentService.getMyPurchases(userId);
