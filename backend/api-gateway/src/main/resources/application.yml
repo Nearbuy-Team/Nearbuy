@@ -21,3 +21,16 @@ spring:
           uri: http://localhost:8084
           predicates:
             - Path=/api/orders/**,/api/wallet/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
