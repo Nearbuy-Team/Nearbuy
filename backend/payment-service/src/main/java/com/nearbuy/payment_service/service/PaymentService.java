@@ -118,5 +118,17 @@ public class PaymentService {
         return walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    private final RestTemplate restTemplate = new RestTemplate();
+   private final RestTemplate restTemplate = new RestTemplate(
+            new org.springframework.http.client.HttpComponentsClientHttpRequestFactory()
+    );
+
+    try {
+            restTemplate.patchForObject(
+                    "http://localhost:8081/api/users/" + sellerId + "/trust-score",
+                    5,
+                    Object.class
+            );
+        } catch (Exception e) {
+            System.out.println("Failed to update trust score: " + e.getClass().getName() + " - " + e.getMessage());
+        }
 }
