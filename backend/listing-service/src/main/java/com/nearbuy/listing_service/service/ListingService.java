@@ -34,6 +34,18 @@ public class ListingService {
                 .orElseThrow(() -> new IllegalArgumentException("Listing not found"));
     }
 
+    public Listing incrementViewCount(Long id) {
+        Listing listing = getListingById(id);
+        listing.setViewCount(listing.getViewCount() + 1);
+        return listingRepository.save(listing);
+    }
+
+    public Listing incrementChatCount(Long id) {
+        Listing listing = getListingById(id);
+        listing.setChatCount(listing.getChatCount() + 1);
+        return listingRepository.save(listing);
+    }
+
     public List<Listing> getMyListings(Long sellerId) {
         return listingRepository.findBySellerId(sellerId);
     }

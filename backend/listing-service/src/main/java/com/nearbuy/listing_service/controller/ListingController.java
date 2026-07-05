@@ -36,7 +36,8 @@ public class ListingController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getListingById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(listingService.getListingById(id));
+            Listing listing = listingService.incrementViewCount(id);
+            return ResponseEntity.ok(listing);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -75,6 +76,16 @@ public class ListingController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/chat-count")
+    public ResponseEntity<?> incrementChatCount(@PathVariable Long id) {
+        try {
+            Listing listing = listingService.incrementChatCount(id);
+            return ResponseEntity.ok(listing);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 }
