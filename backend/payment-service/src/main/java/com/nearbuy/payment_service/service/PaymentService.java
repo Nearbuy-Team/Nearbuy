@@ -7,6 +7,7 @@ import com.nearbuy.payment_service.repository.OrderRepository;
 import com.nearbuy.payment_service.repository.WalletTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -71,6 +72,16 @@ public class PaymentService {
         order.setStatus(Order.OrderStatus.COMPLETED);
         orderRepository.save(order);
 
+        try {
+            restTemplate.patchForObject(
+                    "http://localhost:8081/api/users/" + sellerId + "/trust-score",
+                    5,
+                    Object.class
+            );
+        } catch (Exception e) {
+            System.out.println("Failed to update trust score: " + e.getMessage());
+        }
+
         WalletTransaction release = new WalletTransaction();
         release.setUserId(sellerId);
         release.setOrderId(order.getId());
@@ -106,4 +117,6 @@ public class PaymentService {
     public List<WalletTransaction> getWalletTransactions(Long userId) {
         return walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
+
+    private final RestTemplate restTemplate = new RestTemplate();
 }

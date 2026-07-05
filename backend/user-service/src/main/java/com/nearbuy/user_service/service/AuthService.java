@@ -101,6 +101,16 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    public User adjustTrustScore(Long userId, int delta) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        int newScore = user.getTrustScore() + delta;
+        user.setTrustScore(Math.max(0, Math.min(newScore, 100)));
+
+        return userRepository.save(user);
+    }
+
     public String login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
