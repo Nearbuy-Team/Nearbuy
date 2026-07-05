@@ -20,14 +20,10 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/register")
+   @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = authService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
+        User user = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
     
     @PostMapping("/verify-otp")
