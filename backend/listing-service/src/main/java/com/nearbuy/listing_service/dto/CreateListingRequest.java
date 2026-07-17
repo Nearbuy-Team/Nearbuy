@@ -3,6 +3,7 @@ package com.nearbuy.listing_service.dto;
 import com.nearbuy.listing_service.model.Listing;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public class CreateListingRequest {
 
@@ -10,6 +11,7 @@ public class CreateListingRequest {
     private String description;
     private Listing.ListingType type;
     private BigDecimal price;
+    private List<String> imageUrls;
 
     public String getTitle() {
         return title;
@@ -41,5 +43,13 @@ public class CreateListingRequest {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 }

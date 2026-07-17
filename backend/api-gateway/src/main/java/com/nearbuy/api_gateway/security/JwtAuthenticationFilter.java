@@ -10,24 +10,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Autowired
     private JwtUtil jwtUtil;
 
-    private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth/register",
-            "/api/auth/login"
-    );
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
 
-        if (PUBLIC_PATHS.contains(path)) {
+        boolean publicListingImage = path.startsWith("/api/listings/images/")
+                && exchange.getRequest().getMethod().name().equals("GET");
+        boolean paystackWebhook = path.equals("/api/payments/paystack/webhook")
+                && exchange.getRequest().getMethod().name().equals("POST");
+        if (path.startsWith("/api/auth/") || publicListingImage || paystackWebhook
+                || exchange.getRequest().getMethod().name().equals("OPTIONS")) {
             return chain.filter(exchange);
         }
 
@@ -48,7 +46,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         Long userId = jwtUtil.extractUserId(token);
 
         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                .header("X-User-Id", String.valueOf(userId))
+                .headers(headers -> {
+                    headers.remove("X-User-Id");
+                    headers.set("X-User-Id", String.valueOf(userId));
+                })
                 .build();
 
         return chain.filter(exchange.mutate().request(modifiedRequest).build());

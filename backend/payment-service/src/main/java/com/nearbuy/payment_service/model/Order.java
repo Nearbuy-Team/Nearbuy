@@ -24,12 +24,24 @@ public class Order {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "item_amount", precision = 10, scale = 2)
+    private BigDecimal itemAmount;
+
+    @Column(name = "service_fee", precision = 10, scale = 2)
+    private BigDecimal serviceFee;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "payment_provider", length = 30)
+    private String paymentProvider;
+
+    @Column(name = "payment_reference", unique = true, length = 100)
+    private String paymentReference;
 
     // --- Enum ---
 
@@ -75,6 +87,22 @@ public class Order {
         this.amount = amount;
     }
 
+    public BigDecimal getItemAmount() {
+        return itemAmount;
+    }
+
+    public void setItemAmount(BigDecimal itemAmount) {
+        this.itemAmount = itemAmount;
+    }
+
+    public BigDecimal getServiceFee() {
+        return serviceFee;
+    }
+
+    public void setServiceFee(BigDecimal serviceFee) {
+        this.serviceFee = serviceFee;
+    }
+
     public OrderStatus getStatus() {
         return status;
     }
@@ -86,4 +114,9 @@ public class Order {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public String getPaymentProvider() { return paymentProvider; }
+    public void setPaymentProvider(String paymentProvider) { this.paymentProvider = paymentProvider; }
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
 }

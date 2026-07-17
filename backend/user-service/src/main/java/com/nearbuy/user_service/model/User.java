@@ -1,5 +1,6 @@
 package com.nearbuy.user_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -21,6 +22,7 @@ public class User {
     private String phone;
 
     @Column(name = "password_hash", nullable = false)
+    @JsonIgnore
     private String passwordHash;
 
     @Column(name = "trust_score")
@@ -30,9 +32,11 @@ public class User {
     private Boolean idVerified = false;
 
     @Column(name = "otp_code")
+    @JsonIgnore
     private String otpCode;
 
     @Column(name = "otp_expiry")
+    @JsonIgnore
     private LocalDateTime otpExpiry;
 
     @Column(name = "created_at")

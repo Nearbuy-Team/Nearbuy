@@ -1,76 +1,108 @@
-version: "3.8"
-
 services:
-  postgres:
-    image: postgres:16
-    container_name: nearbuy-postgres
-    environment:
-      POSTGRES_DB: nearbuy_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+  mailpit:
+    image: axllent/mailpit:latest
     ports:
-      - "5433:5432"
+      - "${MAILPIT_PORT:-8025}:8025"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nearbuy_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - nearbuy_pgdata:/var/lib/postgresql/data
-
-  api-gateway:
-    build: ./api-gateway
-    container_name: api-gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      - user-service
-      - listing-service
-      - chat-service
-      - payment-service
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-nearbuy_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   user-service:
     build: ./user-service
-    container_name: user-service
-    ports:
-      - "8081:8081"
-    depends_on:
-      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nearbuy_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: yourpassword
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-nearbuy_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+      JWT_SECRET: ${JWT_SECRET:-nearbuy-super-secret-key-change-this-in-production-1234567890}
+      EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-false}
+      OTP_DELIVERY: ${OTP_DELIVERY:-email}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      mailpit:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
   listing-service:
     build: ./listing-service
-    container_name: listing-service
-    ports:
-      - "8082:8082"
-    depends_on:
-      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nearbuy_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: yourpassword
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-nearbuy_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+      NEARBUY_UPLOAD_DIR: /data/nearbuy-uploads
+    volumes:
+      - nearbuy_uploads:/data/nearbuy-uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   chat-service:
     build: ./chat-service
-    container_name: chat-service
-    ports:
-      - "8083:8083"
-    depends_on:
-      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nearbuy_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: yourpassword
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-nearbuy_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+      LISTING_SERVICE_URL: http://listing-service:8082
+      USER_SERVICE_URL: http://user-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      listing-service:
+        condition: service_started
+      user-service:
+        condition: service_started
 
   payment-service:
     build: ./payment-service
-    container_name: payment-service
-    ports:
-      - "8084:8084"
-    depends_on:
-      - postgres
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nearbuy_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: yourpassword
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-nearbuy_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+      LISTING_SERVICE_URL: http://listing-service:8082
+      USER_SERVICE_URL: http://user-service:8081
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      listing-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-nearbuy-super-secret-key-change-this-in-production-1234567890}
+      USER_SERVICE_URL: http://user-service:8081
+      LISTING_SERVICE_URL: http://listing-service:8082
+      CHAT_SERVICE_URL: http://chat-service:8083
+      PAYMENT_SERVICE_URL: http://payment-service:8084
+    depends_on:
+      user-service:
+        condition: service_started
+      listing-service:
+        condition: service_started
+      chat-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
 
 volumes:
   nearbuy_pgdata:
+  nearbuy_uploads:
