@@ -8,8 +8,9 @@ import com.nearbuy.user_service.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Service
 public class AuthService {
@@ -20,19 +21,34 @@ public class AuthService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private OtpDeliveryService otpDeliveryService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final SecureRandom secureRandom = new SecureRandom();
 
+    @Transactional
     public User register(RegisterRequest request) {
+        String email = requireText(request.getEmail(), "Email").toLowerCase();
+        String phone = requireText(request.getPhone(), "Phone");
+        String fullName = requireText(request.getFullName(), "Full name");
+        String password = requireText(request.getPassword(), "Password");
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException("Email is already registered");
+        }
+        if (userRepository.existsByPhone(phone)) {
+            throw new IllegalArgumentException("Phone number is already registered");
         }
 
         User user = new User();
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setPasswordHash(passwordEncoder.encode(password));
 
         String otp = generateOtp();
         user.setOtpCode(otp);
@@ -40,18 +56,18 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        System.out.println("OTP for " + savedUser.getEmail() + ": " + otp);
+        otpDeliveryService.deliver(savedUser.getEmail(), otp, "Registration");
 
         return savedUser;
     }
 
     private String generateOtp() {
-        int otp = 100000 + new Random().nextInt(900000);
+        int otp = 100000 + secureRandom.nextInt(900000);
         return String.valueOf(otp);
     }
 
     public User verifyOtp(String email, String otpCode) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
@@ -69,8 +85,9 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void requestPasswordReset(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String otp = generateOtp();
@@ -79,12 +96,16 @@ public class AuthService {
 
         userRepository.save(user);
 
-        System.out.println("Password reset OTP for " + user.getEmail() + ": " + otp);
+        otpDeliveryService.deliver(user.getEmail(), otp, "Password reset");
     }
 
     public void resetPassword(String email, String otpCode, String newPassword) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (requireText(newPassword, "New password").length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
 
         if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
             throw new IllegalArgumentException("Invalid OTP");
@@ -112,14 +133,42 @@ public class AuthService {
     }
 
     public String login(LoginRequest request) {
-
-        User user = userRepository.findByEmail(request.getEmail())
+        String identifier = requireText(request.getEmail(), "Email or phone");
+        String password = requireText(request.getPassword(), "Password");
+        User user = userRepository.findByEmailIgnoreCase(identifier)
+                .or(() -> userRepository.findByPhone(identifier))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
+        if (!Boolean.TRUE.equals(user.getIdVerified())) {
+            throw new IllegalArgumentException("Verify your account before logging in");
+        }
+
         return jwtUtil.generateToken(user.getEmail(), user.getId());
+    }
+
+    @Transactional
+    public void resendVerificationOtp(String email) {
+        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (Boolean.TRUE.equals(user.getIdVerified())) {
+            throw new IllegalArgumentException("Account is already verified");
+        }
+
+        String otp = generateOtp();
+        user.setOtpCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        userRepository.save(user);
+        otpDeliveryService.deliver(user.getEmail(), otp, "Verification");
+    }
+
+    private String requireText(String value, String field) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(field + " is required");
+        }
+        return value.trim();
     }
 }

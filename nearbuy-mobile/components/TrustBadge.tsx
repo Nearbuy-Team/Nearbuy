@@ -7,8 +7,7 @@ import type { TrustTier } from '@/lib/mockData';
 export function TrustBadge({ tier }: { tier: TrustTier }) {
   return (
     <View
-      className="flex-row items-center"
-      style={{
+      style={{ flexDirection: 'row', alignItems: 'center', 
         gap: 4,
         backgroundColor: 'rgba(255,255,255,0.92)',
         paddingVertical: 5,

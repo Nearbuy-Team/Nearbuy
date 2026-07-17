@@ -3,11 +3,20 @@ package com.nearbuy.listing_service.controller;
 import com.nearbuy.listing_service.dto.CreateListingRequest;
 import com.nearbuy.listing_service.model.Listing;
 import com.nearbuy.listing_service.service.ListingService;
+import com.nearbuy.listing_service.service.ImageStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.util.Map;
 import java.util.List;
 
 @RestController
@@ -16,6 +25,38 @@ public class ListingController {
 
     @Autowired
     private ListingService listingService;
+
+    @Autowired
+    private ImageStorageService imageStorageService;
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String filename = imageStorageService.store(file);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("url", "/api/listings/images/" + filename));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not store photo");
+        }
+    }
+
+    @GetMapping("/images/{filename:.+}")
+    public ResponseEntity<?> getImage(@PathVariable String filename) {
+        try {
+            Resource resource = imageStorageService.load(filename);
+            String contentType = Files.probeContentType(resource.getFile().toPath());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.maxAge(Duration.ofDays(7)).cachePublic())
+                    .contentType(MediaType.parseMediaType(contentType == null ? "image/jpeg" : contentType))
+                    .body(resource);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
     @PostMapping
     public ResponseEntity<?> createListing(@RequestBody CreateListingRequest request,

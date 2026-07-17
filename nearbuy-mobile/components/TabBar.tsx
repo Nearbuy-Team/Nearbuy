@@ -6,14 +6,15 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMode } from '@/components/ModeContext';
-import { COLORS, FONTS, MODES } from '@/lib/theme';
+import { useTheme } from '@/lib/ThemeContext';
+import { FONTS, MODES } from '@/lib/theme';
 
 type IconType = typeof Home;
 
 // The four real tab routes, in display order. The center "+" FAB is injected
 // between chat and wallet and is NOT a route — it opens the Create modal.
 const TABS: { name: string; label: string; Icon: IconType }[] = [
-  { name: 'index', label: 'Home', Icon: Home },
+  { name: 'home', label: 'Home', Icon: Home },
   { name: 'chat', label: 'Chat', Icon: MessageCircle },
   { name: 'wallet', label: 'Wallet', Icon: Wallet },
   { name: 'profile', label: 'Profile', Icon: User },
@@ -21,19 +22,20 @@ const TABS: { name: string; label: string; Icon: IconType }[] = [
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const { mode } = useMode();
+  const { colors: c, isDark } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const focusedName = state.routes[state.index]?.name;
   // Effective accent: mode accent on Home, locked brand green elsewhere.
-  const onHome = focusedName === 'index';
+  const onHome = focusedName === 'home';
   const accent = onHome ? MODES[mode].accent : MODES.shop.accent;
   const accentText = onHome ? MODES[mode].accentText : MODES.shop.accentText;
 
   const renderTab = (tab: (typeof TABS)[number]) => {
     const route = state.routes.find((r) => r.name === tab.name);
     const isFocused = focusedName === tab.name;
-    const color = isFocused ? accent : COLORS.navInactive;
+    const color = isFocused ? accent : c.navInactive;
 
     const onPress = () => {
       if (!route) return;
@@ -53,11 +55,11 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
     <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
       <BlurView
         intensity={24}
-        tint="light"
+        tint={isDark ? 'dark' : 'light'}
         style={{
-          backgroundColor: 'rgba(255,255,255,0.92)',
+          backgroundColor: isDark ? 'rgba(20,21,25,0.92)' : 'rgba(255,255,255,0.92)',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(17,19,23,0.06)',
+          borderTopColor: c.hairline,
         }}>
         <View
           style={{
@@ -106,7 +108,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
             width: 130,
             height: 5,
             borderRadius: 3,
-            backgroundColor: 'rgba(17,19,23,0.85)',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(17,19,23,0.85)',
           }}
         />
       </BlurView>

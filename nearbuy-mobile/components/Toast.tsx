@@ -3,7 +3,8 @@ import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { useMode } from '@/components/ModeContext';
-import { COLORS, FONTS, SHADOWS } from '@/lib/theme';
+import { useTheme } from '@/lib/ThemeContext';
+import { FONTS, SHADOWS } from '@/lib/theme';
 
 /**
  * Pinned confirmation pill. Rendered by ToastProvider above everything else,
@@ -11,6 +12,7 @@ import { COLORS, FONTS, SHADOWS } from '@/lib/theme';
  */
 export function Toast({ message }: { message: string }) {
   const { theme } = useMode();
+  const { isDark } = useTheme();
 
   return (
     <Animated.View
@@ -24,7 +26,7 @@ export function Toast({ message }: { message: string }) {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 11,
-        backgroundColor: '#15171C',
+        backgroundColor: isDark ? '#2C2E35' : '#15171C',
         borderRadius: 15,
         paddingVertical: 13,
         paddingHorizontal: 16,
@@ -41,7 +43,7 @@ export function Toast({ message }: { message: string }) {
         }}>
         <Check size={14} color={theme.accentText} strokeWidth={3} />
       </View>
-      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: COLORS.surface, letterSpacing: -0.1 }}>
+      <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF', letterSpacing: -0.1 }}>
         {message}
       </Text>
     </Animated.View>

@@ -1,12 +1,10 @@
 module.exports = function (api) {
   api.cache(true);
-  let plugins = [];
-
-  plugins.push('react-native-worklets/plugin');
-
   return {
-    presets: [['babel-preset-expo', { jsxImportSource: 'nativewind' }], 'nativewind/babel'],
-
-    plugins,
+    // NativeWind removed — the app styles entirely with inline `style` props.
+    // Keeping `jsxImportSource: 'nativewind'` broke function-form Pressable
+    // styles on the new architecture, so we use plain babel-preset-expo.
+    presets: ['babel-preset-expo'],
+    plugins: ['react-native-worklets/plugin'],
   };
 };

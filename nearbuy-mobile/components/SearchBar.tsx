@@ -1,7 +1,8 @@
 import { Search, X } from 'lucide-react-native';
 import { Pressable, TextInput, View } from 'react-native';
 
-import { COLORS, FONTS } from '@/lib/theme';
+import { useColors } from '@/lib/ThemeContext';
+import { FONTS } from '@/lib/theme';
 
 interface SearchBarProps {
   placeholder: string;
@@ -15,32 +16,31 @@ interface SearchBarProps {
  * `onQueryChange`.
  */
 export function SearchBar({ placeholder, query, onQueryChange }: SearchBarProps) {
+  const c = useColors();
   return (
     <View
-      className="mt-3 flex-row items-center rounded-2xl bg-chip"
-      style={{ gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
-      <Search size={17} color={COLORS.muted} strokeWidth={2.2} />
+      style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', borderRadius: 16, backgroundColor: c.chip,  gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
+      <Search size={17} color={c.muted} strokeWidth={2.2} />
       <TextInput
         value={query}
         onChangeText={onQueryChange}
         placeholder={placeholder}
-        placeholderTextColor={COLORS.muted}
+        placeholderTextColor={c.muted}
         style={{
           flex: 1,
           minWidth: 0,
           padding: 0,
           fontFamily: FONTS.medium,
           fontSize: 13.5,
-          color: COLORS.ink,
+          color: c.ink,
         }}
       />
       {query.length > 0 && (
         <Pressable
           onPress={() => onQueryChange('')}
           hitSlop={8}
-          className="h-5 w-5 items-center justify-center rounded-full"
-          style={{ backgroundColor: '#D9D9D5' }}>
-          <X size={11} color="#6B6F76" strokeWidth={3} />
+          style={({ pressed }) => ({ height: 20, width: 20, alignItems: 'center', justifyContent: 'center', borderRadius: 9999,  backgroundColor: c.track, transform: [{ scale: pressed ? 0.85 : 1 }] })}>
+          <X size={11} color={c.secondary} strokeWidth={3} />
         </Pressable>
       )}
     </View>

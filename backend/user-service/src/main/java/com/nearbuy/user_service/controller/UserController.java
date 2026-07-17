@@ -1,6 +1,7 @@
 package com.nearbuy.user_service.controller;
 
 import com.nearbuy.user_service.model.User;
+import com.nearbuy.user_service.dto.PublicUserResponse;
 import com.nearbuy.user_service.repository.UserRepository;
 import com.nearbuy.user_service.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +52,12 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPublicUser(@PathVariable Long id) {
+        return userRepository.findById(id)
+                .<ResponseEntity<?>>map(user -> ResponseEntity.ok(new PublicUserResponse(user)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"));
     }
 }

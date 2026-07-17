@@ -3,6 +3,8 @@ package com.nearbuy.listing_service.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "listings")
@@ -40,6 +42,12 @@ public class Listing {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "listing_images", joinColumns = @JoinColumn(name = "listing_id"))
+    @OrderColumn(name = "position")
+    @Column(name = "image_url", nullable = false, length = 500)
+    private List<String> imageUrls = new ArrayList<>();
 
     // --- Enums ---
 
@@ -123,5 +131,13 @@ public class Listing {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls == null ? new ArrayList<>() : new ArrayList<>(imageUrls);
     }
 }

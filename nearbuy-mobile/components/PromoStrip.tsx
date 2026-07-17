@@ -4,17 +4,19 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useMode } from '@/components/ModeContext';
 import { useToast } from '@/components/ToastContext';
-import { COLORS, FONTS } from '@/lib/theme';
+import { useColors } from '@/lib/ThemeContext';
+import { FONTS } from '@/lib/theme';
 
 export function PromoStrip() {
   const { mode, theme } = useMode();
   const { showToast } = useToast();
+  const c = useColors();
 
   const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
 
   return (
     <LinearGradient
-      colors={[COLORS.promoFrom, COLORS.promoTo]}
+      colors={[c.promoFrom, c.promoTo]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0.4 }}
       style={{

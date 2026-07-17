@@ -29,8 +29,10 @@ public class MessageController {
     }
 
     @GetMapping("/{listingId}")
-    public ResponseEntity<List<Message>> getConversation(@PathVariable Long listingId) {
-        return ResponseEntity.ok(messageService.getConversation(listingId));
+    public ResponseEntity<List<Message>> getConversation(@PathVariable Long listingId,
+                                                          @RequestParam Long otherUserId,
+                                                          @RequestHeader("X-User-Id") Long userId) {
+        return ResponseEntity.ok(messageService.getConversation(listingId, userId, otherUserId));
     }
 
     @GetMapping

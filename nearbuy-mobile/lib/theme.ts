@@ -60,8 +60,31 @@ export const FONTS = {
   extrabold: 'Manrope_800ExtraBold',
 } as const;
 
-// Neutral palette
-export const COLORS = {
+// Neutral palette — now two schemes. Screens read the *live* one via
+// `useColors()` (lib/ThemeContext) so Light/Dark/System swaps recolor the app.
+// Brand accents (MODES green/teal/purple) are unchanged across schemes.
+export interface Palette {
+  ink: string; // primary text
+  secondary: string; // secondary text
+  secondaryAlt: string;
+  muted: string; // faint text / placeholders
+  surface: string; // cards, headers, sheets (raised)
+  canvas: string; // screen background
+  chip: string; // inputs, small buttons, avatars
+  track: string; // segmented-control / toggle track
+  hairline: string; // subtle 1px borders
+  border: string; // solid outline borders (outline buttons)
+  divider: string; // row separators inside cards
+  imgBg: string; // image / media placeholders
+  navInactive: string;
+  segInactive: string;
+  promoFrom: string; // promo strip gradient
+  promoTo: string;
+  success: string; // positive amounts / status
+  danger: string; // logout / destructive
+}
+
+export const LIGHT: Palette = {
   ink: '#111317',
   secondary: '#84888F',
   secondaryAlt: '#8A8F98',
@@ -70,12 +93,42 @@ export const COLORS = {
   canvas: '#F6F6F4',
   chip: '#F3F3F1',
   track: '#EEEEEC',
+  hairline: 'rgba(17,19,23,0.06)',
+  border: '#E7E7E3',
+  divider: '#F3F3F0',
+  imgBg: '#EDEDEA',
   navInactive: '#9CA3AF',
   segInactive: '#83878E',
   promoFrom: '#15171C',
   promoTo: '#24272F',
   success: '#0A7D3D',
-} as const;
+  danger: '#E0463E',
+};
+
+export const DARK: Palette = {
+  ink: '#F3F4F6',
+  secondary: '#9CA1A9',
+  secondaryAlt: '#969BA4',
+  muted: '#787D86',
+  surface: '#1A1C21',
+  canvas: '#0F1013',
+  chip: '#25272D',
+  track: '#2C2E35',
+  hairline: 'rgba(255,255,255,0.09)',
+  border: '#34363D',
+  divider: 'rgba(255,255,255,0.06)',
+  imgBg: '#25272D',
+  navInactive: '#6C707A',
+  segInactive: '#9CA1A9',
+  promoFrom: '#1D1F26',
+  promoTo: '#2B2E37',
+  success: '#3FBE6E',
+  danger: '#FF6B61',
+};
+
+/** Light palette. Prefer `useColors()` for reactive theming; this constant is
+ *  the light scheme and is safe for scheme-agnostic values only. */
+export const COLORS = LIGHT;
 
 // Shadows (RN style objects)
 export const SHADOWS = {

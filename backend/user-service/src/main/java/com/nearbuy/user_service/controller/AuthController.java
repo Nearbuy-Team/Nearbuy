@@ -36,6 +36,16 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@RequestBody RequestPasswordResetRequest request) {
+        try {
+            authService.resendVerificationOtp(request.getEmail());
+            return ResponseEntity.ok("OTP sent");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/request-password-reset")
     public ResponseEntity<?> requestPasswordReset(@RequestBody RequestPasswordResetRequest request) {
         try {

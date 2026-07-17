@@ -1,5 +1,7 @@
 # Nearbuy Backend — Handoff Notes
 
+> **Integration update (2026-07-17):** The frontend is now wired to the gateway, runtime values use environment variables, service-to-service URLs are configurable, and Docker Compose can build all five services. Use the repository-root `README.md` as the current setup guide. The older deployment notes below are retained as historical context.
+
 **Status:** All 5 services are feature-complete and tested locally. Nothing further needed from the backend side except deployment/integration.
 
 **Branch:** `backend` on `https://github.com/Nearbuy-Team/Nearbuy.git`

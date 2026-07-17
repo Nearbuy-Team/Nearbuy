@@ -7,7 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useMode } from '@/components/ModeContext';
-import { COLORS, FONTS, MODES, type Mode } from '@/lib/theme';
+import { useColors } from '@/lib/ThemeContext';
+import { FONTS, MODES, type Mode } from '@/lib/theme';
 
 const ORDER: Mode[] = ['shop', 'services', 'rent'];
 const LABELS: Record<Mode, string> = { shop: 'SHOP', services: 'SERVICES', rent: 'RENT' };
@@ -15,6 +16,7 @@ const TRACK_PADDING = 5;
 
 export function ModeSelector() {
   const { mode, setMode, theme } = useMode();
+  const c = useColors();
   const index = ORDER.indexOf(mode);
 
   // We measure the track's width once it lays out, so we can compute how far
@@ -40,8 +42,13 @@ export function ModeSelector() {
   return (
     <View
       onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      className="relative flex-row rounded-2xl bg-track"
-      style={{ padding: TRACK_PADDING }}>
+      style={{
+        position: 'relative',
+        flexDirection: 'row',
+        borderRadius: 16,
+        backgroundColor: c.track,
+        padding: TRACK_PADDING,
+      }}>
       {/* sliding pill — absolutely positioned, slides under the active label */}
       {pillWidth > 0 && (
         <Animated.View
@@ -67,14 +74,13 @@ export function ModeSelector() {
           <Pressable
             key={m}
             onPress={() => setMode(m)}
-            className="flex-1 items-center"
-            style={{ paddingVertical: 11 }}>
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 11 }}>
             <Text
               style={{
                 fontFamily: FONTS.extrabold,
                 fontSize: 12.5,
                 letterSpacing: 0.6,
-                color: active ? MODES[m].accentText : COLORS.segInactive,
+                color: active ? MODES[m].accentText : c.segInactive,
               }}>
               {LABELS[m]}
             </Text>
