@@ -1,76 +1,108 @@
-# Nearbuy Backend
+# Nearbuy
 
-Spring Boot microservices for the Nearbuy marketplace. The API gateway is the only backend endpoint the mobile frontend should call.
+Nearbuy is a local marketplace for buying goods, hiring services, and renting items. This repository contains the Expo/React Native mobile app and the Spring Boot backend.
 
-## Services
+## Project structure
 
-| Service | Internal port | Purpose |
-|---|---:|---|
-| API gateway | 8080 | JWT validation and request routing |
-| User service | 8081 | Accounts, OTP, profiles, notifications |
-| Listing service | 8082 | Listings and local test photo storage |
-| Chat service | 8083 | Buyer/seller conversations |
-| Payment service | 8084 | Orders, escrow, wallet, payment methods, reviews, Paystack |
+| Path | Purpose |
+|---|---|
+| `nearbuy-mobile/` | Expo/React Native mobile application |
+| `backend/api-gateway/` | Public API entry point and JWT validation |
+| `backend/user-service/` | Accounts, OTP, profiles, trust scores, and notifications |
+| `backend/listing-service/` | Listings, search, and local test image storage |
+| `backend/chat-service/` | Buyer and seller messaging |
+| `backend/payment-service/` | Orders, sandbox payments, escrow, wallet, payment methods, and reviews |
+| `backend/docker-compose.yml` | PostgreSQL, Mailpit, and all backend services |
 
-PostgreSQL and Mailpit are included in Docker Compose. Ports 8081 through 8084 are private inside Compose.
+## Prerequisites
 
-## Start locally
+- Docker Desktop
+- Node.js 20 or 22 LTS
+- Expo Go on a physical phone, or an Android/iOS simulator
+
+## First-time configuration
+
+Create local environment files. These files are ignored by Git.
 
 ```powershell
 Copy-Item backend\.env.example backend\.env
+Copy-Item nearbuy-mobile\.env.example nearbuy-mobile\.env
 ```
 
-Replace `POSTGRES_PASSWORD` and `JWT_SECRET` in `backend/.env`, then run:
+Replace `POSTGRES_PASSWORD` and `JWT_SECRET` in `backend/.env` with local values. Keep `PAYSTACK_SECRET_KEY` empty to use the built-in sandbox payment ledger.
+
+Set `EXPO_PUBLIC_API_URL` in `nearbuy-mobile/.env` for the device being used:
+
+| Client | API URL |
+|---|---|
+| Physical phone on the same private Wi-Fi | `http://YOUR_COMPUTER_IPV4:8080` |
+| Android emulator | `http://10.0.2.2:8080` |
+| iOS simulator or web | `http://localhost:8080` |
+
+Use `ipconfig` to find the computer's Wi-Fi IPv4 address. Restart Expo whenever this value changes.
+
+## Start the backend
 
 ```powershell
 Set-Location backend
 docker compose up -d --build
 docker compose ps
+Set-Location ..
 ```
 
-The API gateway is available at `http://localhost:8080`. Development OTP emails appear at `http://localhost:8025`.
+The API gateway is available at `http://localhost:8080`. Development OTP emails are visible in Mailpit at `http://localhost:8025`.
 
-## Seed local test data
+## Seed exhibition test data
 
-After Docker Desktop is running, populate a repeatable development dataset from the repository root:
+From the repository root:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend\scripts\seed-test-data.ps1 -SkipBuild
 ```
 
-Omit `-SkipBuild` when service source code changed and the images need rebuilding. The script resets data belonging to the three `@nearbuy.test` accounts only; other local accounts are left untouched.
+The command resets only the three `@nearbuy.test` accounts and leaves other local accounts untouched.
 
-| Account | Email | Password | Useful data |
-|---|---|---|---|
-| Buyer | `buyer@nearbuy.test` | `Nearbuy123!` | Wallet funds, pending purchase, escrow-held purchase, completed purchases |
-| Seller | `seller@nearbuy.test` | `Nearbuy123!` | Active listings, an escrow-held sale, released funds, review |
-| Rental seller | `rentals@nearbuy.test` | `Nearbuy123!` | Rental listing and completed sale |
+| Account | Email | Password |
+|---|---|---|
+| Buyer | `buyer@nearbuy.test` | `Nearbuy123!` |
+| Seller | `seller@nearbuy.test` | `Nearbuy123!` |
+| Rental seller | `rentals@nearbuy.test` | `Nearbuy123!` |
 
-With Paystack left blank in `backend/.env`, log in as the buyer and use the normal app actions to test:
+Use the buyer account to pay order `NB-92001`, complete `NB-92002`, and review `NB-92003`. Re-run the seed command to restore the starting state.
 
-1. Pay order `NB-92001` to create a sandbox funding transaction and escrow hold.
-2. Complete order `NB-92002` to release its item amount to the seller.
-3. Review completed order `NB-92003`.
+## Start the mobile app
 
-Re-run the seed command whenever you want to restore this baseline.
+Open another PowerShell window:
 
-To stop the stack while preserving database and uploaded-photo volumes:
+```powershell
+Set-Location nearbuy-mobile
+npm.cmd install
+npx.cmd expo start --lan
+```
+
+Scan the QR code with Expo Go. If the QR cannot connect, use a private hotspot and enter `exp://YOUR_COMPUTER_IPV4:8081` manually in Expo Go.
+
+## Stop the backend
+
+From `backend/`:
 
 ```powershell
 docker compose down
 ```
 
-## Optional Paystack test mode
+This preserves PostgreSQL and uploaded-image volumes. Do not add `-v` unless the local database should be deleted.
 
-Leave `PAYSTACK_SECRET_KEY` empty to use the built-in sandbox ledger. To use Paystack test checkout, set a backend-only test secret:
+## Checks
 
-```dotenv
-PAYSTACK_SECRET_KEY=sk_test_your_key_here
+Frontend:
+
+```powershell
+Set-Location nearbuy-mobile
+npx.cmd tsc --noEmit
+npx.cmd expo-doctor
 ```
 
-Never place this secret in the Expo application. The backend initializes and verifies transactions and exposes the signed webhook endpoint at `/api/payments/paystack/webhook`.
-
-## Tests
+Backend:
 
 ```powershell
 backend\user-service\mvnw.cmd test
@@ -80,4 +112,4 @@ backend\payment-service\mvnw.cmd test
 backend\api-gateway\mvnw.cmd test
 ```
 
-See [backend/HANDOFF.md](backend/HANDOFF.md) for service architecture and deployment notes.
+Additional service details are available in [backend/HANDOFF.md](backend/HANDOFF.md) and [nearbuy-mobile/README.md](nearbuy-mobile/README.md).
