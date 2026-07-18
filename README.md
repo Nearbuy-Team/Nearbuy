@@ -30,6 +30,30 @@ docker compose ps
 
 The API gateway is available at `http://localhost:8080`. Development OTP emails appear at `http://localhost:8025`.
 
+## Seed local test data
+
+After Docker Desktop is running, populate a repeatable development dataset from the repository root:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend\scripts\seed-test-data.ps1 -SkipBuild
+```
+
+Omit `-SkipBuild` when service source code changed and the images need rebuilding. The script resets data belonging to the three `@nearbuy.test` accounts only; other local accounts are left untouched.
+
+| Account | Email | Password | Useful data |
+|---|---|---|---|
+| Buyer | `buyer@nearbuy.test` | `Nearbuy123!` | Wallet funds, pending purchase, escrow-held purchase, completed purchases |
+| Seller | `seller@nearbuy.test` | `Nearbuy123!` | Active listings, an escrow-held sale, released funds, review |
+| Rental seller | `rentals@nearbuy.test` | `Nearbuy123!` | Rental listing and completed sale |
+
+With Paystack left blank in `backend/.env`, log in as the buyer and use the normal app actions to test:
+
+1. Pay order `NB-92001` to create a sandbox funding transaction and escrow hold.
+2. Complete order `NB-92002` to release its item amount to the seller.
+3. Review completed order `NB-92003`.
+
+Re-run the seed command whenever you want to restore this baseline.
+
 To stop the stack while preserving database and uploaded-photo volumes:
 
 ```powershell
