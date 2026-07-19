@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Check, ChevronLeft } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,9 +17,21 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 type Step = 'email' | 'code' | 'reset' | 'done';
 
 const COPY: Record<Step, { title: string; sub: string; primary: string }> = {
-  email: { title: 'Reset password', sub: "Enter your email and we'll send you a reset code.", primary: 'Send code' },
-  code: { title: 'Check your email', sub: 'Enter the 6-digit code we just sent you.', primary: 'Verify code' },
-  reset: { title: 'New password', sub: 'Choose a strong new password for your account.', primary: 'Update password' },
+  email: {
+    title: 'Reset password',
+    sub: "Enter your email and we'll send you a reset code.",
+    primary: 'Send code',
+  },
+  code: {
+    title: 'Check your email',
+    sub: 'Enter the 6-digit code we just sent you.',
+    primary: 'Continue',
+  },
+  reset: {
+    title: 'New password',
+    sub: 'Choose a strong new password for your account.',
+    primary: 'Update password',
+  },
   done: { title: 'All set', sub: '', primary: 'Back to login' },
 };
 
@@ -37,8 +49,31 @@ export default function Forgot() {
   const [pw2, setPw2] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const copy = COPY[step];
+
+  const startResendCooldown = () => {
+    setResendCooldown(60);
+    if (resendTimer.current) clearInterval(resendTimer.current);
+    resendTimer.current = setInterval(() => {
+      setResendCooldown((current) => {
+        if (current <= 1) {
+          if (resendTimer.current) clearInterval(resendTimer.current);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(
+    () => () => {
+      if (resendTimer.current) clearInterval(resendTimer.current);
+    },
+    []
+  );
 
   const onBack = () => {
     if (step === 'email' || step === 'done') router.replace('/(auth)/login');
@@ -53,6 +88,7 @@ export default function Forgot() {
         setSubmitting(true);
         await requestPasswordReset(email.trim().toLowerCase());
         setErr({});
+        startResendCooldown();
         setStep('code');
       } else if (step === 'code') {
         if (code.length !== 6) return setErr({ code: 'Enter the 6-digit reset code' });
@@ -75,13 +111,34 @@ export default function Forgot() {
     }
   };
 
+  const onResend = async () => {
+    if (resendCooldown > 0 || submitting) return;
+    setSubmitting(true);
+    try {
+      await requestPasswordReset(email.trim().toLowerCase());
+      startResendCooldown();
+      showToast('New reset code sent');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not resend code');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.canvas }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={{ paddingHorizontal: 18, paddingTop: 6, paddingBottom: 6 }}>
         <Pressable
           onPress={onBack}
-          style={{ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: c.chip }}>
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            borderRadius: 11,
+            backgroundColor: c.chip,
+          }}>
           <ChevronLeft size={17} color={c.ink} strokeWidth={2.6} />
         </Pressable>
       </View>
@@ -90,11 +147,19 @@ export default function Forgot() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 14, paddingBottom: 40 }}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
+        <Text
+          style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
           {copy.title}
         </Text>
         {!!copy.sub && (
-          <Text style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 7, lineHeight: 20 }}>
+          <Text
+            style={{
+              fontFamily: FONTS.medium,
+              fontSize: 13.5,
+              color: c.secondary,
+              marginTop: 7,
+              lineHeight: 20,
+            }}>
             {copy.sub}
           </Text>
         )}
@@ -125,6 +190,19 @@ export default function Forgot() {
               maxLength={6}
               style={{ letterSpacing: 4, fontFamily: FONTS.extrabold }}
             />
+            <Pressable
+              onPress={() => void onResend()}
+              disabled={resendCooldown > 0 || submitting}
+              style={{ alignSelf: 'flex-start', marginTop: 12 }}>
+              <Text
+                style={{
+                  fontFamily: FONTS.extrabold,
+                  fontSize: 12.5,
+                  color: resendCooldown > 0 ? c.muted : c.ink,
+                }}>
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -134,7 +212,7 @@ export default function Forgot() {
               label="NEW PASSWORD"
               value={pw}
               onChangeText={setPw}
-              placeholder="At least 6 characters"
+              placeholder="At least 10 characters"
               secureTextEntry
             />
             <AuthInput
@@ -149,9 +227,11 @@ export default function Forgot() {
         )}
 
         {step === 'done' && (
-          <View style={{ alignItems: 'center',  paddingVertical: 36 }}>
+          <View style={{ alignItems: 'center', paddingVertical: 36 }}>
             <View
-              style={{ alignItems: 'center', justifyContent: 'center',
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
                 width: 72,
                 height: 72,
                 borderRadius: 24,
@@ -164,10 +244,18 @@ export default function Forgot() {
               }}>
               <Check size={34} color={theme.accentText} strokeWidth={3} />
             </View>
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 18, color: c.ink, marginTop: 18 }}>
+            <Text
+              style={{ fontFamily: FONTS.extrabold, fontSize: 18, color: c.ink, marginTop: 18 }}>
               Password updated
             </Text>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 13, color: c.secondary, marginTop: 6, textAlign: 'center' }}>
+            <Text
+              style={{
+                fontFamily: FONTS.medium,
+                fontSize: 13,
+                color: c.secondary,
+                marginTop: 6,
+                textAlign: 'center',
+              }}>
               You can now log in with your new password.
             </Text>
           </View>

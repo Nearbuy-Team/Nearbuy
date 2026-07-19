@@ -47,6 +47,10 @@ public class User {
     @JsonIgnore
     private LocalDateTime otpLastSentAt;
 
+    @Column(name = "otp_purpose")
+    @JsonIgnore
+    private String otpPurpose;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -127,4 +131,6 @@ public class User {
     public void setOtpAttempts(Integer otpAttempts) { this.otpAttempts = otpAttempts; }
     public LocalDateTime getOtpLastSentAt() { return otpLastSentAt; }
     public void setOtpLastSentAt(LocalDateTime otpLastSentAt) { this.otpLastSentAt = otpLastSentAt; }
+    public String getOtpPurpose() { return otpPurpose; }
+    public void setOtpPurpose(String otpPurpose) { this.otpPurpose = otpPurpose; }
 }

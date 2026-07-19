@@ -31,7 +31,6 @@ interface AuthContextValue {
   isLoading: boolean;
   seenOnboarding: boolean;
   pendingEmail: string | null;
-  pendingPhone: string | null;
   login: (idOrEmail: string, password: string) => Promise<void>;
   register: (fields: RegisterFields) => Promise<void>;
   verifyOtp: (code: string) => Promise<void>;
@@ -148,7 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       seenOnboarding,
       pendingEmail: pending?.email ?? null,
-      pendingPhone: pending?.phone ?? null,
       login: async (identifier, password) => {
         const result = await authApi.login(identifier.trim(), password);
         const current = await usersApi.me(result.token);

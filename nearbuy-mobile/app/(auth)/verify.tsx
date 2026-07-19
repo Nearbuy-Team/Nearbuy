@@ -14,15 +14,15 @@ import { FONTS, MODES } from '@/lib/theme';
 const theme = MODES.shop;
 // Lock icon sits on a mode tint (light in both schemes) → stays dark.
 const ON_TINT = '#111317';
-const RESEND_SECONDS = 30;
+const RESEND_SECONDS = 60;
 
 export default function Verify() {
   const router = useRouter();
-  const { pendingPhone, resendVerification, verifyOtp } = useAuth();
+  const { pendingEmail, resendVerification, verifyOtp } = useAuth();
   const { showToast } = useToast();
   const col = useColors();
   const { isDark } = useTheme();
-  const { phone } = useLocalSearchParams<{ phone?: string }>();
+  const { email } = useLocalSearchParams<{ email?: string }>();
 
   const [code, setCode] = useState('');
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
@@ -80,24 +80,46 @@ export default function Verify() {
       <View style={{ paddingHorizontal: 18, paddingTop: 6, paddingBottom: 6 }}>
         <Pressable
           onPress={() => router.back()}
-          style={{ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: col.chip }}>
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            borderRadius: 11,
+            backgroundColor: col.chip,
+          }}>
           <ChevronLeft size={17} color={col.ink} strokeWidth={2.6} />
         </Pressable>
       </View>
 
       <View style={{ paddingHorizontal: 26, paddingTop: 18 }}>
         <View
-          style={{ alignItems: 'center', justifyContent: 'center',  width: 52, height: 52, borderRadius: 17, backgroundColor: theme.tagBg, marginBottom: 18 }}>
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 52,
+            height: 52,
+            borderRadius: 17,
+            backgroundColor: theme.tagBg,
+            marginBottom: 18,
+          }}>
           <Lock size={24} color={ON_TINT} strokeWidth={2.1} />
         </View>
 
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: col.ink }}>
-          Verify your number
+        <Text
+          style={{
+            fontFamily: FONTS.extrabold,
+            fontSize: 26,
+            letterSpacing: -0.8,
+            color: col.ink,
+          }}>
+          Verify your email
         </Text>
-        <Text style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: col.secondary, marginTop: 7 }}>
+        <Text
+          style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: col.secondary, marginTop: 7 }}>
           Enter the 6-digit code we sent to{' '}
           <Text style={{ fontFamily: FONTS.bold, color: col.ink }}>
-            {pendingPhone || phone || '+233 24 000 0000'}
+            {pendingEmail || email || 'your email address'}
           </Text>
         </Text>
 
@@ -105,7 +127,7 @@ export default function Verify() {
           <OtpInput value={code} onChange={setCode} />
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 6, marginTop: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20 }}>
           <Text style={{ fontFamily: FONTS.medium, fontSize: 12.5, color: col.secondary }}>
             Didn’t get the code?
           </Text>

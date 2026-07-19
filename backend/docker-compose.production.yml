@@ -61,6 +61,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:?Set MAIL_PASSWORD in .env.production}
       MAIL_SMTP_AUTH: "true"
       MAIL_STARTTLS: "true"
+      MAIL_STARTTLS_REQUIRED: "true"
     depends_on:
       postgres:
         condition: service_healthy

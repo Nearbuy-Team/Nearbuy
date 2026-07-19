@@ -1,5 +1,10 @@
 import { useRef } from 'react';
-import { TextInput, View, type NativeSyntheticEvent, type TextInputKeyPressEventData } from 'react-native';
+import {
+  TextInput,
+  View,
+  type NativeSyntheticEvent,
+  type TextInputKeyPressEventData,
+} from 'react-native';
 
 import { useColors } from '@/lib/ThemeContext';
 import { FONTS } from '@/lib/theme';
@@ -17,8 +22,22 @@ export function OtpInput({ length = 6, value, onChange }: OtpInputProps) {
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
 
   const setDigit = (i: number, raw: string) => {
-    const ch = raw.replace(/\D/g, '').slice(-1);
+    const numeric = raw.replace(/\D/g, '');
     const next = digits.slice();
+
+    if (numeric.length > 1) {
+      numeric
+        .slice(0, length - i)
+        .split('')
+        .forEach((digit, offset) => {
+          next[i + offset] = digit;
+        });
+      onChange(next.join(''));
+      refs.current[Math.min(i + numeric.length, length - 1)]?.focus();
+      return;
+    }
+
+    const ch = numeric.slice(-1);
     next[i] = ch;
     onChange(next.join(''));
     if (ch && i < length - 1) refs.current[i + 1]?.focus();
@@ -31,7 +50,7 @@ export function OtpInput({ length = 6, value, onChange }: OtpInputProps) {
   };
 
   return (
-    <View style={{ flexDirection: 'row',  gap: 10 }}>
+    <View style={{ flexDirection: 'row', gap: 10 }}>
       {digits.map((d, i) => (
         <TextInput
           key={i}
@@ -42,7 +61,9 @@ export function OtpInput({ length = 6, value, onChange }: OtpInputProps) {
           onChangeText={(t) => setDigit(i, t)}
           onKeyPress={onKeyPress(i)}
           keyboardType="number-pad"
-          maxLength={1}
+          maxLength={length}
+          textContentType={i === 0 ? 'oneTimeCode' : 'none'}
+          autoComplete={i === 0 ? 'one-time-code' : 'off'}
           style={{
             flex: 1,
             height: 60,

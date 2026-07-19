@@ -2,6 +2,7 @@ package com.nearbuy.user_service.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
@@ -31,9 +32,17 @@ public class OtpDeliveryService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(email);
-        message.setSubject("Your Nearbuy verification code");
+        message.setSubject("Password reset".equalsIgnoreCase(purpose)
+                ? "Reset your Nearbuy password"
+                : "Verify your Nearbuy email");
         message.setText("Your Nearbuy " + purpose.toLowerCase() + " code is " + code
-                + ". It expires in 10 minutes. Never share this code.");
-        mailSender.send(message);
+                + ". It expires in 10 minutes. Never share this code."
+                + System.lineSeparator() + System.lineSeparator()
+                + "If you did not request this code, you can ignore this email.");
+        try {
+            mailSender.send(message);
+        } catch (MailException error) {
+            throw new IllegalStateException("The verification email could not be sent. Please try again.", error);
+        }
     }
 }

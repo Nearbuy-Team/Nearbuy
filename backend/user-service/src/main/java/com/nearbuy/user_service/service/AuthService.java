@@ -14,6 +14,8 @@ import java.security.SecureRandom;
 
 @Service
 public class AuthService {
+    private static final String OTP_PURPOSE_REGISTRATION = "REGISTRATION";
+    private static final String OTP_PURPOSE_PASSWORD_RESET = "PASSWORD_RESET";
 
     @Autowired
     private UserRepository userRepository;
@@ -51,7 +53,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(password));
 
         String otp = generateOtp();
-        setOtp(user, otp);
+        setOtp(user, otp, OTP_PURPOSE_REGISTRATION);
 
         User savedUser = userRepository.save(user);
 
@@ -65,49 +67,47 @@ public class AuthService {
         return String.valueOf(otp);
     }
 
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
     public User verifyOtp(String email, String otpCode) {
-        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
+        User user = userRepository.findByEmailIgnoreCaseForUpdate(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        verifyOtpValue(user, otpCode);
+        verifyOtpValue(user, otpCode, OTP_PURPOSE_REGISTRATION);
 
         user.setIdVerified(true);
-        user.setOtpCode(null);
-        user.setOtpExpiry(null);
-        user.setOtpAttempts(0);
+        clearOtp(user);
 
         return userRepository.save(user);
     }
 
     @Transactional
     public void requestPasswordReset(String email) {
-        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
+        User user = userRepository.findByEmailIgnoreCaseForUpdate(requireText(email, "Email"))
                 .orElse(null);
         if (user == null) return;
         enforceOtpCooldown(user);
 
         String otp = generateOtp();
-        setOtp(user, otp);
+        setOtp(user, otp, OTP_PURPOSE_PASSWORD_RESET);
 
         userRepository.save(user);
 
         otpDeliveryService.deliver(user.getEmail(), otp, "Password reset");
     }
 
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
     public void resetPassword(String email, String otpCode, String newPassword) {
-        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
+        User user = userRepository.findByEmailIgnoreCaseForUpdate(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (requireText(newPassword, "New password").length() < 10) {
             throw new IllegalArgumentException("Password must be at least 10 characters");
         }
 
-        verifyOtpValue(user, otpCode);
+        verifyOtpValue(user, otpCode, OTP_PURPOSE_PASSWORD_RESET);
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setOtpCode(null);
-        user.setOtpExpiry(null);
-        user.setOtpAttempts(0);
+        clearOtp(user);
 
         userRepository.save(user);
     }
@@ -142,7 +142,7 @@ public class AuthService {
 
     @Transactional
     public void resendVerificationOtp(String email) {
-        User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
+        User user = userRepository.findByEmailIgnoreCaseForUpdate(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (Boolean.TRUE.equals(user.getIdVerified())) {
             throw new IllegalArgumentException("Account is already verified");
@@ -150,7 +150,7 @@ public class AuthService {
         enforceOtpCooldown(user);
 
         String otp = generateOtp();
-        setOtp(user, otp);
+        setOtp(user, otp, OTP_PURPOSE_REGISTRATION);
         userRepository.save(user);
         otpDeliveryService.deliver(user.getEmail(), otp, "Verification");
     }
@@ -162,21 +162,22 @@ public class AuthService {
         return value.trim();
     }
 
-    private void setOtp(User user, String otp) {
+    private void setOtp(User user, String otp, String purpose) {
         user.setOtpCode(passwordEncoder.encode(otp));
         user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
         user.setOtpAttempts(0);
         user.setOtpLastSentAt(LocalDateTime.now());
+        user.setOtpPurpose(purpose);
     }
 
-    private void verifyOtpValue(User user, String otpCode) {
+    private void verifyOtpValue(User user, String otpCode, String expectedPurpose) {
         String submitted = requireText(otpCode, "OTP");
-        if (user.getOtpCode() == null || user.getOtpExpiry() == null) {
+        if (user.getOtpCode() == null || user.getOtpExpiry() == null
+                || !expectedPurpose.equals(user.getOtpPurpose())) {
             throw new IllegalArgumentException("Request a new OTP");
         }
         if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-            user.setOtpCode(null);
-            user.setOtpExpiry(null);
+            clearOtp(user);
             userRepository.save(user);
             throw new IllegalArgumentException("OTP has expired");
         }
@@ -184,14 +185,20 @@ public class AuthService {
             int attempts = (user.getOtpAttempts() == null ? 0 : user.getOtpAttempts()) + 1;
             user.setOtpAttempts(attempts);
             if (attempts >= 5) {
-                user.setOtpCode(null);
-                user.setOtpExpiry(null);
+                clearOtp(user);
             }
             userRepository.save(user);
             throw new IllegalArgumentException(
                     attempts >= 5 ? "Too many attempts. Request a new OTP" : "Invalid OTP"
             );
         }
+    }
+
+    private void clearOtp(User user) {
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        user.setOtpAttempts(0);
+        user.setOtpPurpose(null);
     }
 
     private void enforceOtpCooldown(User user) {

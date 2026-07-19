@@ -40,7 +40,7 @@ export default function Signup() {
     setSubmitting(true);
     try {
       await register({ name, email, phone, password });
-      router.push({ pathname: '/(auth)/verify', params: { phone } });
+      router.push({ pathname: '/(auth)/verify', params: { email: email.trim().toLowerCase() } });
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not create account');
     } finally {
@@ -54,7 +54,14 @@ export default function Signup() {
       <View style={{ paddingHorizontal: 18, paddingTop: 6, paddingBottom: 6 }}>
         <Pressable
           onPress={() => router.replace('/(auth)/login')}
-          style={{ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: c.chip }}>
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            borderRadius: 11,
+            backgroundColor: c.chip,
+          }}>
           <ChevronLeft size={17} color={c.ink} strokeWidth={2.6} />
         </Pressable>
       </View>
@@ -63,10 +70,12 @@ export default function Signup() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 10, paddingBottom: 40 }}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
+        <Text
+          style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
           Create account
         </Text>
-        <Text style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 7 }}>
+        <Text
+          style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 7 }}>
           Join Nearbuy to shop, book and rent near you.
         </Text>
 
@@ -140,7 +149,13 @@ export default function Signup() {
         </Text>
 
         <Pressable onPress={() => router.replace('/(auth)/login')} style={{ paddingTop: 16 }}>
-          <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: c.secondary, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontFamily: FONTS.bold,
+              fontSize: 13,
+              color: c.secondary,
+              textAlign: 'center',
+            }}>
             Already have an account? <Text style={{ color: c.ink }}>Log in</Text>
           </Text>
         </Pressable>

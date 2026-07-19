@@ -147,6 +147,8 @@ backend\api-gateway\mvnw.cmd test
 
 Additional service details are available in [backend/HANDOFF.md](backend/HANDOFF.md) and [nearbuy-mobile/README.md](nearbuy-mobile/README.md).
 
+OTP verification and password reset work through email. The local stack captures messages in Mailpit; follow [EMAIL_SETUP.md](EMAIL_SETUP.md) to deliver them to real inboxes through SMTP.
+
 ## Real payments, deployment, APK, and iOS
 
 Use [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the complete Paystack test/live checklist, online Docker deployment, Expo Go testing, Android APK/App Bundle builds, iOS ad hoc/TestFlight builds, backups, and live-launch gates.

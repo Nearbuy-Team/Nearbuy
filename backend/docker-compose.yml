@@ -31,8 +31,14 @@ services:
       JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
       EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-false}
       OTP_DELIVERY: ${OTP_DELIVERY:-email}
-      MAIL_HOST: mailpit
-      MAIL_PORT: 1025
+      OTP_FROM: ${OTP_FROM:-no-reply@nearbuy.local}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
+      MAIL_STARTTLS_REQUIRED: ${MAIL_STARTTLS_REQUIRED:-false}
     depends_on:
       mailpit:
         condition: service_started
