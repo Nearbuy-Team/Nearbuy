@@ -11,8 +11,9 @@ Nearbuy is a local marketplace for buying goods, hiring services, and renting it
 | `backend/user-service/` | Accounts, OTP, profiles, trust scores, and notifications |
 | `backend/listing-service/` | Listings, search, and local test image storage |
 | `backend/chat-service/` | Buyer and seller messaging |
-| `backend/payment-service/` | Orders, sandbox payments, escrow, wallet, payment methods, and reviews |
+| `backend/payment-service/` | Orders, Paystack collection/refunds/payouts, protected-payment ledger, payout methods, and reviews |
 | `backend/docker-compose.yml` | PostgreSQL, Mailpit, and all backend services |
+| `backend/docker-compose.production.yml` | HTTPS production stack for an internet-connected server |
 
 ## Prerequisites
 
@@ -113,3 +114,7 @@ backend\api-gateway\mvnw.cmd test
 ```
 
 Additional service details are available in [backend/HANDOFF.md](backend/HANDOFF.md) and [nearbuy-mobile/README.md](nearbuy-mobile/README.md).
+
+## Real payments, deployment, APK, and iOS
+
+Use [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the complete Paystack test/live checklist, online Docker deployment, Expo Go testing, Android APK/App Bundle builds, iOS ad hoc/TestFlight builds, backups, and live-launch gates.

@@ -16,13 +16,16 @@ public class CustomerDataService {
     private final PaymentMethodRepository paymentMethodRepository;
     private final ReviewRepository reviewRepository;
     private final OrderRepository orderRepository;
+    private final PaystackTransferService paystackTransferService;
 
     public CustomerDataService(PaymentMethodRepository paymentMethodRepository,
                                ReviewRepository reviewRepository,
-                               OrderRepository orderRepository) {
+                               OrderRepository orderRepository,
+                               PaystackTransferService paystackTransferService) {
         this.paymentMethodRepository = paymentMethodRepository;
         this.reviewRepository = reviewRepository;
         this.orderRepository = orderRepository;
+        this.paystackTransferService = paystackTransferService;
     }
 
     public List<PaymentMethod> paymentMethods(Long userId) {
@@ -32,7 +35,10 @@ public class CustomerDataService {
     @Transactional
     public PaymentMethod addMobileMoney(Long userId, String provider, String phone) {
         String digits = phone == null ? "" : phone.replaceAll("\\D", "");
-        if (digits.length() < 8) throw new IllegalArgumentException("Enter a valid Mobile Money number");
+        if (digits.length() == 12 && digits.startsWith("233")) digits = "0" + digits.substring(3);
+        if (digits.length() != 10 || !digits.startsWith("0")) {
+            throw new IllegalArgumentException("Enter a Ghana Mobile Money number such as 0551234987");
+        }
         String normalizedProvider = provider == null ? "" : provider.trim().toUpperCase();
         if (!List.of("MTN", "AT", "TELECEL").contains(normalizedProvider)) {
             throw new IllegalArgumentException("Choose MTN, AT, or Telecel");
@@ -43,6 +49,9 @@ public class CustomerDataService {
         method.setType(PaymentMethod.MethodType.MOBILE_MONEY);
         method.setProvider(normalizedProvider);
         method.setLastFour(digits.substring(digits.length() - 4));
+        method.setPaystackRecipientCode(
+                paystackTransferService.createMobileMoneyRecipient(userId, normalizedProvider, digits)
+        );
         method.setDefaultMethod(first);
         return paymentMethodRepository.save(method);
     }

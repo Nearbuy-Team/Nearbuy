@@ -120,13 +120,4 @@ public class ListingController {
         }
     }
 
-    @PatchMapping("/{id}/chat-count")
-    public ResponseEntity<?> incrementChatCount(@PathVariable Long id) {
-        try {
-            Listing listing = listingService.incrementChatCount(id);
-            return ResponseEntity.ok(listing);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
 }

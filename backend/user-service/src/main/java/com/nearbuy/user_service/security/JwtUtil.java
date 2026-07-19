@@ -2,12 +2,12 @@ package com.nearbuy.user_service.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -19,8 +19,11 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.issuer:nearbuy-api}")
+    private String issuer;
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes();
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -30,6 +33,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .subject(email)
+                .issuer(issuer)
                 .claim("userId", userId)
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -40,6 +44,7 @@ public class JwtUtil {
     public String extractEmail(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
+                .requireIssuer(issuer)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -49,6 +54,7 @@ public class JwtUtil {
     public Long extractUserId(String token) {
         Object userId = Jwts.parser()
                 .verifyWith(getSigningKey())
+                .requireIssuer(issuer)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
@@ -60,6 +66,7 @@ public class JwtUtil {
         try {
             Jwts.parser()
                     .verifyWith(getSigningKey())
+                    .requireIssuer(issuer)
                     .build()
                     .parseSignedClaims(token);
             return true;

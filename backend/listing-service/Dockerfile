@@ -6,6 +6,10 @@ RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+RUN addgroup -S nearbuy && adduser -S nearbuy -G nearbuy \
+    && mkdir -p /data/nearbuy-uploads \
+    && chown -R nearbuy:nearbuy /data/nearbuy-uploads
+COPY --from=build --chown=nearbuy:nearbuy /app/target/*.jar app.jar
+USER nearbuy
 EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]

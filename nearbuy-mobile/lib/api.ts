@@ -135,7 +135,21 @@ export interface ApiMessage {
   createdAt: string;
 }
 
-export type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'REFUND_PENDING'
+  | 'REFUNDED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+export type PayoutStatus = 'NOT_STARTED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
+export type RefundStatus =
+  | 'NOT_REQUESTED'
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'NEEDS_ATTENTION'
+  | 'PROCESSED'
+  | 'FAILED';
 
 export interface ApiOrder {
   id: number;
@@ -149,9 +163,11 @@ export interface ApiOrder {
   createdAt: string;
   paymentProvider: string | null;
   paymentReference: string | null;
+  payoutStatus: PayoutStatus;
+  refundStatus: RefundStatus;
 }
 
-export type TransactionType = 'CREDIT' | 'DEBIT' | 'ESCROW_HOLD' | 'ESCROW_RELEASE';
+export type TransactionType = 'CREDIT' | 'DEBIT' | 'ESCROW_HOLD' | 'ESCROW_RELEASE' | 'REFUND';
 
 export interface ApiWalletTransaction {
   id: number;
@@ -180,6 +196,7 @@ export interface ApiPaymentMethod {
   provider: string;
   lastFour: string;
   defaultMethod: boolean;
+  payoutReady: boolean;
   createdAt: string;
 }
 
@@ -283,10 +300,12 @@ export const paymentsApi = {
     }),
   completeOrder: (token: string, orderId: number) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/complete`, { method: 'POST', token }),
+  refundOrder: (token: string, orderId: number) =>
+    apiRequest<ApiOrder>(`/api/orders/${orderId}/refund`, { method: 'POST', token }),
   orders: (token: string) => apiRequest<ApiOrder[]>('/api/orders/mine', { token }),
   sales: (token: string) => apiRequest<ApiOrder[]>('/api/orders/sales', { token }),
   walletBalance: (token: string) =>
-    apiRequest<{ balance: number }>('/api/wallet/balance', { token }),
+    apiRequest<{ balance: number; sandboxMode: boolean }>('/api/wallet/balance', { token }),
   walletTransactions: (token: string) =>
     apiRequest<ApiWalletTransaction[]>('/api/wallet/transactions', { token }),
   topUp: (token: string, amount: number) =>

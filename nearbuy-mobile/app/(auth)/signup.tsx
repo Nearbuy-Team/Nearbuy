@@ -33,7 +33,7 @@ export default function Signup() {
     if (!name.trim()) e.name = 'Enter your full name';
     if (!isEmail(email)) e.email = 'Enter a valid email address';
     if (phone.replace(/\D/g, '').length < 9) e.phone = 'Enter a valid phone number';
-    if (password.length < 6) e.password = 'Use at least 6 characters';
+    if (password.length < 10) e.password = 'Use at least 10 characters';
     setErr(e);
     if (Object.keys(e).length) return;
 
@@ -101,7 +101,7 @@ export default function Signup() {
             value={password}
             onChangeText={setPassword}
             error={err.password}
-            placeholder="At least 6 characters"
+            placeholder="At least 10 characters"
             secureTextEntry
           />
         </View>

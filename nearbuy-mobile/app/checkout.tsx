@@ -1,8 +1,8 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
 import { Check, ShieldCheck, X } from 'lucide-react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,15 +13,13 @@ import { useAuth } from '@/lib/AuthContext';
 import { useColors } from '@/lib/ThemeContext';
 import {
   type ApiListing,
-  type ApiPaymentMethod,
   formatGhs,
   listingsApi,
-  paymentMethodsApi,
   paymentsApi,
 } from '@/lib/api';
 import { FONTS, MODES, SHADOWS, type Mode } from '@/lib/theme';
 
-// Icon/text on a mode tint (escrow banner) stays dark — the tint is light in both schemes.
+// Icon/text on this light protection banner stays dark in both schemes.
 const ON_TINT = '#111317';
 
 type Step = 'review' | 'processing' | 'success';
@@ -45,7 +43,6 @@ export default function Checkout() {
 
   const [step, setStep] = useState<Step>('review');
   const [orderRef, setOrderRef] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<ApiPaymentMethod | null>(null);
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: number;
     reference: string;
@@ -60,18 +57,6 @@ export default function Checkout() {
         showToast(error instanceof Error ? error.message : 'Could not load listing')
       );
   }, [listing, listingId, showToast, token]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!token) return;
-      void paymentMethodsApi
-        .all(token)
-        .then((methods) =>
-          setPaymentMethod(methods.find((method) => method.defaultMethod) ?? methods[0] ?? null)
-        )
-        .catch(() => setPaymentMethod(null));
-    }, [token])
-  );
 
   const amt = Number(listing?.price ?? 0);
   const fee = Math.max(2, Math.round(amt * 0.015 * 100) / 100);
@@ -100,7 +85,10 @@ export default function Checkout() {
           if (!initialized.authorizationUrl || !initialized.reference)
             throw new Error('Paystack checkout is unavailable');
           setPendingPayment({ orderId: created.id, reference: initialized.reference });
-          await WebBrowser.openBrowserAsync(initialized.authorizationUrl);
+          await WebBrowser.openAuthSessionAsync(
+            initialized.authorizationUrl,
+            'nearbuy://payment-complete'
+          );
           paid = await paymentsApi.verifyOrderPayment(token, created.id, initialized.reference);
         }
       }
@@ -115,7 +103,7 @@ export default function Checkout() {
 
   const done = () => {
     router.back();
-    showToast('Order placed · escrow held');
+    showToast('Order placed · payment confirmed');
   };
 
   const messageSeller = () => {
@@ -284,29 +272,20 @@ export default function Checkout() {
                     backgroundColor: '#FFCC00',
                   }}>
                   <Text style={{ fontFamily: FONTS.extrabold, fontSize: 9, color: '#1A1A1A' }}>
-                    {paymentMethod?.provider ?? 'MoMo'}
+                    Pay
                   </Text>
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>
-                    {paymentMethod
-                      ? `${paymentMethod.provider} Mobile Money`
-                      : 'Choose a payment method'}
+                    Paystack secure checkout
                   </Text>
                   <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>
-                    {paymentMethod
-                      ? `•••• ${paymentMethod.lastFour}`
-                      : 'Paystack test checkout can also be used'}
+                    Choose Mobile Money or card in checkout
                   </Text>
                 </View>
-                <Pressable onPress={() => router.push('/payment-methods')}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: c.ink }}>
-                    Change
-                  </Text>
-                </Pressable>
               </View>
 
-              {/* escrow banner */}
+              {/* payment protection banner */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -329,8 +308,8 @@ export default function Checkout() {
                     color: ON_TINT,
                     lineHeight: 17,
                   }}>
-                  Held in escrow until you confirm. Released to the seller only when you’re
-                  satisfied.
+                  Nearbuy records the payment until you confirm receipt, then starts the seller’s
+                  verified Mobile Money payout.
                 </Text>
               </View>
             </ScrollView>
@@ -384,7 +363,7 @@ export default function Checkout() {
                 marginTop: 6,
                 textAlign: 'center',
               }}>
-              Holding funds in escrow with MTN MoMo.
+              Waiting for Paystack to confirm the payment.
             </Text>
           </View>
         )}
@@ -427,7 +406,7 @@ export default function Checkout() {
                   textAlign: 'center',
                   lineHeight: 19,
                 }}>
-                Your funds are held safely in escrow and released to the seller once you confirm.
+                Your payment is confirmed. The seller’s payout starts after you confirm receipt.
               </Text>
               <View
                 style={{

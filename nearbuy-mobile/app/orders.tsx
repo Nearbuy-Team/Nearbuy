@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import { useListings } from '@/components/ListingsContext';
 import { SubHeader } from '@/components/SubHeader';
@@ -13,13 +13,22 @@ import { FONTS, SHADOWS, type Palette } from '@/lib/theme';
 
 const statusLabel: Record<OrderStatus, string> = {
   PENDING: 'Pending payment',
-  PAID: 'In escrow',
+  PAID: 'Payment secured',
+  REFUND_PENDING: 'Refund processing',
+  REFUNDED: 'Refunded',
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
 };
 
 const statusColor = (status: OrderStatus, c: Palette): string =>
-  ({ PENDING: c.muted, PAID: '#B7791F', COMPLETED: c.success, CANCELLED: c.muted })[status];
+  ({
+    PENDING: c.muted,
+    PAID: '#B7791F',
+    REFUND_PENDING: '#B7791F',
+    REFUNDED: c.success,
+    COMPLETED: c.success,
+    CANCELLED: c.muted,
+  })[status];
 
 export default function Orders() {
   const c = useColors();
@@ -59,10 +68,46 @@ export default function Orders() {
     try {
       const updated = await paymentsApi.completeOrder(token, order.id);
       setOrders((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-      showToast('Order completed · escrow released');
+      showToast(
+        updated.payoutStatus === 'PENDING'
+          ? 'Order completed · seller payout processing'
+          : 'Order completed'
+      );
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not complete order');
     }
+  };
+
+  const refund = (order: ApiOrder) => {
+    if (!token) return;
+    Alert.alert(
+      'Request full refund?',
+      'Use this only before confirming receipt. Paystack will return the full payment using the original payment route.',
+      [
+        { text: 'Keep order', style: 'cancel' },
+        {
+          text: 'Request refund',
+          style: 'destructive',
+          onPress: () => {
+            void paymentsApi
+              .refundOrder(token, order.id)
+              .then((updated) => {
+                setOrders((current) =>
+                  current.map((item) => (item.id === updated.id ? updated : item))
+                );
+                showToast(
+                  updated.status === 'REFUNDED'
+                    ? 'Demo refund completed'
+                    : 'Refund request sent to Paystack'
+                );
+              })
+              .catch((error) =>
+                showToast(error instanceof Error ? error.message : 'Could not request refund')
+              );
+          },
+        },
+      ]
+    );
   };
 
   const submitReview = async (order: ApiOrder) => {
@@ -168,21 +213,33 @@ export default function Orders() {
                       </Text>
                     </View>
                     {order.status === 'PAID' ? (
-                      <Pressable
-                        onPress={() => void complete(order)}
-                        style={{
-                          alignSelf: 'flex-start',
-                          backgroundColor: c.ink,
-                          borderRadius: 9,
-                          paddingVertical: 7,
-                          paddingHorizontal: 10,
-                          marginTop: 10,
-                        }}>
-                        <Text
-                          style={{ fontFamily: FONTS.extrabold, fontSize: 11, color: c.surface }}>
-                          Confirm received
-                        </Text>
-                      </Pressable>
+                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                        <Pressable
+                          onPress={() => void complete(order)}
+                          style={{
+                            backgroundColor: c.ink,
+                            borderRadius: 9,
+                            paddingVertical: 7,
+                            paddingHorizontal: 10,
+                          }}>
+                          <Text
+                            style={{ fontFamily: FONTS.extrabold, fontSize: 11, color: c.surface }}>
+                            Confirm received
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => refund(order)}
+                          style={{
+                            backgroundColor: c.chip,
+                            borderRadius: 9,
+                            paddingVertical: 7,
+                            paddingHorizontal: 10,
+                          }}>
+                          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11, color: c.ink }}>
+                            Request refund
+                          </Text>
+                        </Pressable>
+                      </View>
                     ) : null}
                     {order.status === 'COMPLETED' && !reviewedOrders.has(order.id) ? (
                       <Pressable
@@ -280,6 +337,11 @@ export default function Orders() {
                 <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11, color, marginTop: 8 }}>
                   {statusLabel[order.status]}
                 </Text>
+                {order.status === 'COMPLETED' && order.payoutStatus !== 'NOT_STARTED' ? (
+                  <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: c.secondary, marginTop: 4 }}>
+                    Payout: {order.payoutStatus.toLowerCase()}
+                  </Text>
+                ) : null}
               </View>
             );
           })}

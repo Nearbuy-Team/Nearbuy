@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.nearbuy.user_service.service.AuthService;
 
 @RestController
 @RequestMapping("/api/users")
@@ -19,9 +18,6 @@ public class UserController {
 
     @Autowired
     private JwtUtil jwtUtil;
-
-    @Autowired
-    private AuthService authService;
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
@@ -41,16 +37,6 @@ public class UserController {
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token");
-        }
-    }
-
-    @PatchMapping("/{id}/trust-score")
-    public ResponseEntity<?> adjustTrustScore(@PathVariable Long id, @RequestBody Integer delta) {
-        try {
-            User user = authService.adjustTrustScore(id, delta);
-            return ResponseEntity.ok(user);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 

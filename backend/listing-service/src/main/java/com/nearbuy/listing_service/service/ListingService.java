@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class ListingService {
@@ -19,18 +20,27 @@ public class ListingService {
         if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Title is required");
         }
+        if (request.getTitle().trim().length() > 120) {
+            throw new IllegalArgumentException("Title can contain at most 120 characters");
+        }
+        if (request.getDescription() != null && request.getDescription().trim().length() > 5_000) {
+            throw new IllegalArgumentException("Description can contain at most 5,000 characters");
+        }
         if (request.getType() == null) {
             throw new IllegalArgumentException("Listing type is required");
         }
         if (request.getPrice() == null || request.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Price must be greater than zero");
         }
+        if (request.getPrice().compareTo(new BigDecimal("1000000.00")) > 0) {
+            throw new IllegalArgumentException("Price cannot exceed GHS 1,000,000");
+        }
         Listing listing = new Listing();
         listing.setSellerId(sellerId);
         listing.setTitle(request.getTitle().trim());
         listing.setDescription(request.getDescription() == null ? "" : request.getDescription().trim());
         listing.setType(request.getType());
-        listing.setPrice(request.getPrice());
+        listing.setPrice(request.getPrice().setScale(2, RoundingMode.HALF_UP));
         if (request.getImageUrls() != null) {
             if (request.getImageUrls().size() > 8) {
                 throw new IllegalArgumentException("A listing can have at most 8 photos");

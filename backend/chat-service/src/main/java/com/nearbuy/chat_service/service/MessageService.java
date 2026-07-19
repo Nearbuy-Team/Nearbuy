@@ -5,6 +5,7 @@ import com.nearbuy.chat_service.model.Message;
 import com.nearbuy.chat_service.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,18 +31,43 @@ public class MessageService {
         if (senderId.equals(request.getReceiverId())) {
             throw new IllegalArgumentException("You cannot message yourself");
         }
+        String content = request.getContent().trim();
+        if (content.length() > 2_000) {
+            throw new IllegalArgumentException("Messages can contain at most 2,000 characters");
+        }
+
+        ListingSnapshot listing;
+        try {
+            listing = restTemplate.getForObject(
+                    listingServiceUrl + "/api/listings/" + request.getListingId(),
+                    ListingSnapshot.class
+            );
+        } catch (Exception error) {
+            throw new IllegalArgumentException("Listing could not be loaded");
+        }
+        if (listing == null || listing.sellerId() == null) {
+            throw new IllegalArgumentException("Listing is unavailable");
+        }
+        boolean buyerStartingChat = request.getReceiverId().equals(listing.sellerId());
+        boolean sellerReplying = senderId.equals(listing.sellerId())
+                && messageRepository.conversationExists(
+                        request.getListingId(), senderId, request.getReceiverId()
+                );
+        if (!buyerStartingChat && !sellerReplying) {
+            throw new SecurityException("Messages must be between a listing seller and an interested buyer");
+        }
 
         Message message = new Message();
         message.setListingId(request.getListingId());
         message.setSenderId(senderId);
         message.setReceiverId(request.getReceiverId());
-        message.setContent(request.getContent().trim());
+        message.setContent(content);
 
         Message saved = messageRepository.save(message);
 
         try {
             restTemplate.patchForObject(
-                    listingServiceUrl + "/api/listings/" + request.getListingId() + "/chat-count",
+                    listingServiceUrl + "/api/internal/listings/" + request.getListingId() + "/chat-count",
                     null,
                     Object.class
             );
@@ -77,9 +103,16 @@ public class MessageService {
         return messageRepository.findBySenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId);
     }
 
-    private final RestTemplate restTemplate = new RestTemplate(
-            new org.springframework.http.client.HttpComponentsClientHttpRequestFactory()
-    );
+    private final RestTemplate restTemplate = createRestTemplate();
+
+    private static RestTemplate createRestTemplate() {
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectTimeout(3_000);
+        factory.setConnectionRequestTimeout(3_000);
+        factory.setReadTimeout(5_000);
+        return new RestTemplate(factory);
+    }
 
     private record NotificationRequest(Long userId, String title, String body, String route) {}
+    private record ListingSnapshot(Long id, Long sellerId, String status) {}
 }

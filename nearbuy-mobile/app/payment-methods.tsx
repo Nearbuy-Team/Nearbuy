@@ -50,7 +50,7 @@ export default function PaymentMethods() {
       setMethods((current) => [created, ...current]);
       setPhone('');
       setAdding(false);
-      showToast('Mobile Money method saved');
+      showToast(created.payoutReady ? 'Payout account verified' : 'Demo payout method saved');
       await load();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not save method');
@@ -84,7 +84,7 @@ export default function PaymentMethods() {
   return (
     <View style={{ flex: 1, backgroundColor: c.canvas }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <SubHeader title="Payment methods" />
+      <SubHeader title="Seller payout method" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -92,7 +92,7 @@ export default function PaymentMethods() {
         {loading ? <ActivityIndicator color={c.ink} /> : null}
         {!loading && methods.length === 0 && !adding ? (
           <Text style={{ fontFamily: FONTS.medium, color: c.secondary }}>
-            Add a test Mobile Money number for checkout.
+            Add the Mobile Money account where you want to receive seller payouts.
           </Text>
         ) : null}
         <View style={{ gap: 12 }}>
@@ -136,6 +136,15 @@ export default function PaymentMethods() {
                     marginTop: 1,
                   }}>
                   •••• {method.lastFour}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: FONTS.medium,
+                    fontSize: 10.5,
+                    color: method.payoutReady ? c.success : c.muted,
+                    marginTop: 2,
+                  }}>
+                  {method.payoutReady ? 'Verified for Paystack payouts' : 'Saved for demo mode'}
                 </Text>
               </View>
               <View
@@ -247,7 +256,7 @@ export default function PaymentMethods() {
             }}>
             <Plus size={16} color={theme.accentText} strokeWidth={3} />
             <Text style={{ fontFamily: FONTS.extrabold, fontSize: 14, color: theme.accentText }}>
-              Add payment method
+              Add payout method
             </Text>
           </Pressable>
         )}

@@ -24,7 +24,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 && exchange.getRequest().getMethod().name().equals("GET");
         boolean paystackWebhook = path.equals("/api/payments/paystack/webhook")
                 && exchange.getRequest().getMethod().name().equals("POST");
-        if (path.startsWith("/api/auth/") || publicListingImage || paystackWebhook
+        boolean paystackCallback = path.equals("/api/payments/paystack/callback")
+                && exchange.getRequest().getMethod().name().equals("GET");
+        if (path.startsWith("/api/auth/") || publicListingImage || paystackWebhook || paystackCallback
                 || exchange.getRequest().getMethod().name().equals("OPTIONS")) {
             return chain.filter(exchange);
         }

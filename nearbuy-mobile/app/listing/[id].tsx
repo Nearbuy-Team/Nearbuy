@@ -115,7 +115,7 @@ export default function ListingDetail() {
     ? [
         listing.type === 'GOOD' ? 'Shop' : listing.type === 'SERVICE' ? 'Services' : 'Rent',
         'Verified account',
-        'Escrow protected',
+        'Protected payment',
       ]
     : [];
 
@@ -401,7 +401,7 @@ export default function ListingDetail() {
                 color: c.secondary,
                 lineHeight: 17,
               }}>
-              Escrow-protected — payment is held until the order is completed.
+              Pay through Nearbuy. Seller payout starts only after the buyer confirms receipt.
             </Text>
           </View>
         </View>

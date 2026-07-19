@@ -34,8 +34,8 @@ public class AuthService {
         String fullName = requireText(request.getFullName(), "Full name");
         String password = requireText(request.getPassword(), "Password");
 
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
+        if (password.length() < 10) {
+            throw new IllegalArgumentException("Password must be at least 10 characters");
         }
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException("Email is already registered");
@@ -51,8 +51,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(password));
 
         String otp = generateOtp();
-        user.setOtpCode(otp);
-        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        setOtp(user, otp);
 
         User savedUser = userRepository.save(user);
 
@@ -70,17 +69,12 @@ public class AuthService {
         User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
-            throw new IllegalArgumentException("Invalid OTP");
-        }
-
-        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("OTP has expired");
-        }
+        verifyOtpValue(user, otpCode);
 
         user.setIdVerified(true);
         user.setOtpCode(null);
         user.setOtpExpiry(null);
+        user.setOtpAttempts(0);
 
         return userRepository.save(user);
     }
@@ -88,11 +82,12 @@ public class AuthService {
     @Transactional
     public void requestPasswordReset(String email) {
         User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElse(null);
+        if (user == null) return;
+        enforceOtpCooldown(user);
 
         String otp = generateOtp();
-        user.setOtpCode(otp);
-        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        setOtp(user, otp);
 
         userRepository.save(user);
 
@@ -103,21 +98,16 @@ public class AuthService {
         User user = userRepository.findByEmailIgnoreCase(requireText(email, "Email"))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (requireText(newPassword, "New password").length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
+        if (requireText(newPassword, "New password").length() < 10) {
+            throw new IllegalArgumentException("Password must be at least 10 characters");
         }
 
-        if (user.getOtpCode() == null || !user.getOtpCode().equals(otpCode)) {
-            throw new IllegalArgumentException("Invalid OTP");
-        }
-
-        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("OTP has expired");
-        }
+        verifyOtpValue(user, otpCode);
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setOtpCode(null);
         user.setOtpExpiry(null);
+        user.setOtpAttempts(0);
 
         userRepository.save(user);
     }
@@ -157,10 +147,10 @@ public class AuthService {
         if (Boolean.TRUE.equals(user.getIdVerified())) {
             throw new IllegalArgumentException("Account is already verified");
         }
+        enforceOtpCooldown(user);
 
         String otp = generateOtp();
-        user.setOtpCode(otp);
-        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        setOtp(user, otp);
         userRepository.save(user);
         otpDeliveryService.deliver(user.getEmail(), otp, "Verification");
     }
@@ -170,5 +160,44 @@ public class AuthService {
             throw new IllegalArgumentException(field + " is required");
         }
         return value.trim();
+    }
+
+    private void setOtp(User user, String otp) {
+        user.setOtpCode(passwordEncoder.encode(otp));
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
+        user.setOtpAttempts(0);
+        user.setOtpLastSentAt(LocalDateTime.now());
+    }
+
+    private void verifyOtpValue(User user, String otpCode) {
+        String submitted = requireText(otpCode, "OTP");
+        if (user.getOtpCode() == null || user.getOtpExpiry() == null) {
+            throw new IllegalArgumentException("Request a new OTP");
+        }
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            user.setOtpCode(null);
+            user.setOtpExpiry(null);
+            userRepository.save(user);
+            throw new IllegalArgumentException("OTP has expired");
+        }
+        if (!passwordEncoder.matches(submitted, user.getOtpCode())) {
+            int attempts = (user.getOtpAttempts() == null ? 0 : user.getOtpAttempts()) + 1;
+            user.setOtpAttempts(attempts);
+            if (attempts >= 5) {
+                user.setOtpCode(null);
+                user.setOtpExpiry(null);
+            }
+            userRepository.save(user);
+            throw new IllegalArgumentException(
+                    attempts >= 5 ? "Too many attempts. Request a new OTP" : "Invalid OTP"
+            );
+        }
+    }
+
+    private void enforceOtpCooldown(User user) {
+        if (user.getOtpLastSentAt() != null
+                && user.getOtpLastSentAt().plusSeconds(60).isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Wait one minute before requesting another OTP");
+        }
     }
 }

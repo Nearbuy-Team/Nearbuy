@@ -59,7 +59,7 @@ export default function Forgot() {
         setErr({});
         setStep('reset');
       } else if (step === 'reset') {
-        if (pw.length < 6) return setErr({ pw: 'Use at least 6 characters' });
+        if (pw.length < 10) return setErr({ pw: 'Use at least 10 characters' });
         if (pw !== pw2) return setErr({ pw: 'Passwords do not match' });
         setSubmitting(true);
         await resetPassword(email.trim().toLowerCase(), code, pw);

@@ -8,5 +8,6 @@ import java.util.Optional;
 public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Long> {
     List<PaymentMethod> findByUserIdOrderByDefaultMethodDescCreatedAtDesc(Long userId);
     Optional<PaymentMethod> findByIdAndUserId(Long id, Long userId);
+    Optional<PaymentMethod> findFirstByUserIdAndDefaultMethodTrueOrderByCreatedAtDesc(Long userId);
     boolean existsByUserId(Long userId);
 }

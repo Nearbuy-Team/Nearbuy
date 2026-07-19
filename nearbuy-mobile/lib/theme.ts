@@ -23,7 +23,7 @@ export const MODES: Record<Mode, ModeTheme> = {
     tagBorder: 'rgba(204,255,0,0.42)',
     cta: 'Buy Now',
     searchHint: 'Search goods near you…',
-    promoTitle: 'Verified sellers, escrow-protected',
+    promoTitle: 'Verified sellers, protected payments',
     promoSub: 'Pay safely — funds held until you confirm',
     toast: 'Added to cart',
   },
