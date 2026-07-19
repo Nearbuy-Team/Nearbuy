@@ -21,6 +21,38 @@ Nearbuy is a local marketplace for buying goods, hiring services, and renting it
 - Node.js 20 or 22 LTS
 - Expo Go on a physical phone, or an Android/iOS simulator
 
+## Exhibition day: one-command setup
+
+Before leaving home, open Docker Desktop once while internet is available so its engine and the Nearbuy images are ready. At the exhibition:
+
+1. Connect the laptop and iPhone to the same private Wi-Fi or iPhone hotspot. Turn off VPNs and allow **Local Network** access for Expo Go in iPhone Settings.
+2. Open Docker Desktop and wait until it says the engine is running.
+3. Open PowerShell in this repository and run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\START_EXHIBITION.ps1
+```
+
+The launcher detects the laptop's current IP address, updates the mobile API URL, starts the local backend/database, resets the safe demo accounts, verifies the user, listing, and payment services, and opens Expo with a fresh QR code. It uses the built-in payment sandbox by default, so the demo does not depend on mobile data or move real money. Keep PowerShell open and keep the laptop awake while demonstrating the app. Scan the QR using the iPhone Camera or Expo Go.
+
+For the protected-payment demo, sign in as `buyer@nearbuy.test`, open any listing, continue to checkout, and pay. This creates a paid order and one protected-payment hold. Then open **Profile → My orders & bookings**: **Confirm received** releases the item amount to the seller, while **Request refund** returns the full payment to the buyer. Use two purchases to show both outcomes, or run the launcher again to reset the demo. The seeded order `NB-92002` is already paid if you want to jump straight to release or refund.
+
+If you have stable internet and specifically want Paystack's test checkout, keep the `sk_test_...` secret in `backend/.env` and run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\START_EXHIBITION.ps1 -UsePaystack
+```
+
+The exhibition launcher refuses live Paystack keys. Do not use real customer money in a demonstration.
+
+When finished, press `Ctrl+C`, open PowerShell in the repository root, and run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\STOP_EXHIBITION.ps1
+```
+
+This stops Expo and every Nearbuy container without deleting the PostgreSQL or uploaded-image volumes.
+
 ## First-time configuration
 
 Create local environment files. These files are ignored by Git.
@@ -81,7 +113,7 @@ npm.cmd install
 npx.cmd expo start --lan --go
 ```
 
-Scan the QR code with Expo Go. The explicit `--go` flag prevents Expo from selecting development-build mode when `expo-dev-client` is installed. If the QR cannot connect, use a private hotspot and enter `exp://YOUR_COMPUTER_IPV4:8081` manually in Expo Go.
+Scan the QR code with the iPhone Camera or Expo Go. The explicit `--go` flag prevents Expo from selecting development-build mode when `expo-dev-client` is installed. If the QR cannot connect, confirm that Expo Go has Local Network permission and reconnect both devices to the same private hotspot; an iPhone does not need manual URL entry when the QR is correct.
 
 ## Stop the backend
 
