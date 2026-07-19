@@ -53,7 +53,7 @@ export default function Signup() {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={{ paddingHorizontal: 18, paddingTop: 6, paddingBottom: 6 }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(auth)/login')}
           style={{ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: c.chip }}>
           <ChevronLeft size={17} color={c.ink} strokeWidth={2.6} />
         </Pressable>
