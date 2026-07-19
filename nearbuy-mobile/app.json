@@ -4,7 +4,11 @@
     "slug": "nearbuy",
     "version": "1.0.0",
     "scheme": "nearbuy",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -35,7 +39,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nearbuy.marketplace"
@@ -46,6 +52,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7c197b38-7c0a-4ad0-93eb-6334bb60708e"
+      }
+    },
+    "owner": "everybodyhatesbari"
   }
 }

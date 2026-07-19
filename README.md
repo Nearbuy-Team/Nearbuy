@@ -78,10 +78,10 @@ Open another PowerShell window:
 ```powershell
 Set-Location nearbuy-mobile
 npm.cmd install
-npx.cmd expo start --lan
+npx.cmd expo start --lan --go
 ```
 
-Scan the QR code with Expo Go. If the QR cannot connect, use a private hotspot and enter `exp://YOUR_COMPUTER_IPV4:8081` manually in Expo Go.
+Scan the QR code with Expo Go. The explicit `--go` flag prevents Expo from selecting development-build mode when `expo-dev-client` is installed. If the QR cannot connect, use a private hotspot and enter `exp://YOUR_COMPUTER_IPV4:8081` manually in Expo Go.
 
 ## Stop the backend
 

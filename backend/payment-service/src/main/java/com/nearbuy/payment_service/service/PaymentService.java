@@ -104,9 +104,6 @@ public class PaymentService {
         if (!sandboxEnabled) {
             throw new IllegalStateException("Sandbox payments are disabled");
         }
-        if (paystackTransferService.isConfigured()) {
-            throw new IllegalStateException("Sandbox payment is disabled while Paystack is configured");
-        }
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 

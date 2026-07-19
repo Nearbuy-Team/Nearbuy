@@ -21,6 +21,7 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,7 +83,7 @@ public class PaystackService {
         String reference = "NB-" + order.getId() + "-" + UUID.randomUUID().toString().substring(0, 8);
         HttpHeaders headers = paystackHeaders();
         Map<String, Object> body = new HashMap<>();
-        body.put("email", user.email());
+        body.put("email", checkoutEmail(user.email()));
         body.put("amount", PaystackAmounts.toMinorUnits(order.getAmount()));
         body.put("currency", "GHS");
         body.put("reference", reference);
@@ -109,6 +110,13 @@ public class PaystackService {
             throw error;
         } catch (Exception error) {
             log.warn("Paystack payment initialization failed for order {}", orderId, error);
+            if (sandboxEnabled) {
+                order.setPaymentProvider("SANDBOX");
+                order.setPaymentReference(null);
+                order.setPaymentAuthorizationUrl(null);
+                orderRepository.save(order);
+                return new PaymentInitialization("SANDBOX", null, null);
+            }
             throw new IllegalStateException("Paystack checkout is temporarily unavailable");
         }
     }
@@ -208,6 +216,14 @@ public class PaystackService {
 
     private boolean isConfigured() {
         return secretKey != null && (secretKey.startsWith("sk_test_") || secretKey.startsWith("sk_live_"));
+    }
+
+    private String checkoutEmail(String email) {
+        if (secretKey != null && secretKey.startsWith("sk_test_")
+                && email != null && email.toLowerCase(Locale.ROOT).endsWith(".test")) {
+            return "customer@email.com";
+        }
+        return email;
     }
     private HttpHeaders paystackHeaders() {
         HttpHeaders headers = new HttpHeaders();
