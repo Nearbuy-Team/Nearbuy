@@ -57,7 +57,9 @@ try {
     }
 
     $buildArguments = @('eas-cli@latest', 'build', '--platform', 'android', '--profile', 'preview', '--non-interactive')
-    if (-not $NoWait) {
+    if ($NoWait) {
+        $buildArguments += '--no-wait'
+    } else {
         $buildArguments += '--wait'
     }
     & npx.cmd @buildArguments | Out-Host
