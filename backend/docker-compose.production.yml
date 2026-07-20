@@ -53,11 +53,14 @@ services:
       JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-true}
-      OTP_DELIVERY: ${OTP_DELIVERY:-brevo}
+      OTP_DELIVERY: ${OTP_DELIVERY:-mailjet}
       OTP_FROM: ${OTP_FROM:?Set OTP_FROM in .env.production}
       OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_API_URL: ${MAILJET_API_URL:-https://api.mailjet.com/v3.1/send}
       MAIL_HOST: ${MAIL_HOST:-localhost}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}

@@ -13,20 +13,20 @@ The default Docker setup captures messages in Mailpit, so local testing works wi
 
 Mailpit does not deliver to a real inbox.
 
-## Real delivery with Brevo
+## Real delivery with Mailjet
 
-Brevo's HTTPS transactional-email API is the configured hosted option. This is important on Render because Render's free web services block outbound SMTP ports. Brevo's Free plan currently includes 300 email sends per day, which is enough for exhibition OTP tests.
+Mailjet's HTTPS transactional-email API is the configured hosted option. This is important on Render because Render's free web services block outbound SMTP ports. Mailjet's Free plan currently includes 6,000 sends per month with a limit of 200 per day, which is enough for exhibition OTP tests.
 
-1. Create a free Brevo account at [brevo.com](https://www.brevo.com/).
-2. In Brevo, open **Settings > Senders, Domains & Dedicated IPs > Senders** and add a sender address. Complete the verification email.
-3. Open **Settings > SMTP & API > API Keys**, create an API key, and copy it once.
+1. Create a free Mailjet account at [mailjet.com](https://www.mailjet.com/).
+2. In Mailjet, open **Account Settings > Add a Sender Domain or Address**, add the address shown in `OTP_FROM`, and click the verification link Mailjet sends to it.
+3. Open **Account Settings > API Key Management** and copy both the API key and secret key.
 4. For local Docker testing, run:
 
    ```powershell
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_BREVO.ps1 -Restart
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_MAILJET.ps1 -Restart
    ```
 
-   Enter the exact verified sender and paste the hidden `xkeysib-...` API key when prompted.
+   Enter the exact verified sender and paste the two hidden Mailjet keys when prompted.
 
 5. Register with a new address you can access, then test **Forgot password** with that address.
 
@@ -34,12 +34,13 @@ For Render, enter the same values in the Blueprint prompts:
 
 ```text
 OTP_FROM = the exact verified sender address
-BREVO_API_KEY = the private xkeysib-... API key
+MAILJET_API_KEY = the Mailjet API key
+MAILJET_SECRET_KEY = the Mailjet secret key
 ```
 
-Do not put the API key in `nearbuy-mobile/.env`, `render.yaml`, source code, screenshots, or Git. If delivery fails, inspect **Transactional > Logs** in Brevo and the user-service logs in Render. Check spam during the first tests; a properly authenticated custom domain improves deliverability but is not required for a short exhibition test.
+Do not put either key in `nearbuy-mobile/.env`, `render.yaml`, source code, screenshots, or Git. If delivery fails, inspect Mailjet's transactional message statistics and the user-service logs in Render. Check spam during the first tests; a properly authenticated custom domain improves deliverability.
 
-Official references: [Brevo transactional email API](https://developers.brevo.com/docs/send-a-transactional-email), [Brevo Free plan](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan), and [sender/domain authentication](https://help.brevo.com/hc/en-us/articles/14925263522578-Comply-with-Gmail-Yahoo-and-Microsoft-s-requirements-for-email-senders).
+Official references: [Mailjet Send API v3.1](https://dev.mailjet.com/email/guides/send-api-v31/), [Mailjet Free plan](https://documentation.mailjet.com/hc/en-us/articles/360043048393-What-is-this-200-emails-per-day-limit-on-free-accounts), and [sender verification](https://documentation.mailjet.com/hc/en-us/articles/360042759253-How-to-add-a-sender-address).
 
 ## SMTP remains available off Render
 

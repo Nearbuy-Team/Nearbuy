@@ -35,6 +35,9 @@ services:
       OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_API_URL: ${MAILJET_API_URL:-https://api.mailjet.com/v3.1/send}
       MAIL_HOST: ${MAIL_HOST:-mailpit}
       MAIL_PORT: ${MAIL_PORT:-1025}
       MAIL_USERNAME: ${MAIL_USERNAME:-}

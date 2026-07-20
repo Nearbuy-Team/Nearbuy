@@ -45,10 +45,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\START_EXHIBITION.ps1 -
 
 The exhibition launcher refuses live Paystack keys. Do not use real customer money in a demonstration.
 
-To send registration and password-reset codes to real inboxes, first verify a sender and create an API key in Brevo. Then run this once; the API key prompt is hidden:
+To send registration and password-reset codes to real inboxes, first verify a sender and create API credentials in Mailjet. Then run this once; both key prompts are hidden:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_BREVO.ps1 -Restart
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_MAILJET.ps1 -Restart
 ```
 
 For an installable Android exhibition build, run `BUILD_ANDROID_APK.ps1`. It detects the current laptop LAN address, stores it in the EAS preview environment, and creates an APK. Rebuild if the laptop's LAN address changes. To make the APK work on any internet connection, deploy `render.yaml` and rebuild with `-ApiUrl https://YOUR-API.onrender.com`.

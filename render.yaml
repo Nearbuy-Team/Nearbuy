@@ -23,12 +23,14 @@ services:
       - key: JAVA_TOOL_OPTIONS
         value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
       - key: OTP_DELIVERY
-        value: brevo
+        value: mailjet
       - key: OTP_FROM_NAME
         value: Nearbuy
       - key: OTP_FROM
         sync: false
-      - key: BREVO_API_KEY
+      - key: MAILJET_API_KEY
+        sync: false
+      - key: MAILJET_SECRET_KEY
         sync: false
       - key: EXPO_PUSH_ENABLED
         value: "false"

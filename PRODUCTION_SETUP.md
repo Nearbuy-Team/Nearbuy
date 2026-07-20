@@ -24,7 +24,7 @@ Docker is not an online backend. Docker packages PostgreSQL and the five backend
 1. A Ghana Paystack business account. Complete business activation before using live keys.
 2. A Linux VPS or cloud VM with a public IPv4 address. Use at least 2 vCPU, 4 GB RAM, and 30 GB storage if the server will build all Java images itself.
 3. A domain or subdomain such as `api.example.com`.
-4. A Brevo account with a verified sender and API key for real OTP email delivery.
+4. A Mailjet account with a verified sender, API key, and secret key for real OTP email delivery.
 5. An Expo account for EAS cloud builds.
 6. Apple Developer membership for physical-device iOS distribution or TestFlight.
 7. Google Play Console registration only when publishing the Android App Bundle to Google Play; it is not needed for a shareable preview APK.
@@ -54,8 +54,9 @@ Use this option to make the APK work over Wi-Fi or mobile data without keeping t
 3. Keep every declared resource on the **Free** plan. At the secret prompts enter:
 
    ```text
-   OTP_FROM = the exact sender email verified in Brevo
-   BREVO_API_KEY = the private xkeysib-... Brevo API key
+   OTP_FROM = the exact sender email verified in Mailjet
+   MAILJET_API_KEY = the Mailjet API key
+   MAILJET_SECRET_KEY = the Mailjet secret key
    PAYSTACK_SECRET_KEY = your sk_test_... Paystack key
    ```
 
@@ -82,7 +83,7 @@ Use this option to make the APK work over Wi-Fi or mobile data without keeping t
 
 7. Install the new APK and test registration, email verification, login, one Paystack test purchase, refund, and completion before exhibition day.
 
-The generated internal API key prevents clients from bypassing the gateway and forging identity headers. Render's database connection is converted to JDBC at container startup, and Brevo uses HTTPS rather than blocked SMTP ports.
+The generated internal API key prevents clients from bypassing the gateway and forging identity headers. Render's database connection is converted to JDBC at container startup, and Mailjet uses HTTPS rather than blocked SMTP ports.
 
 Render Free is appropriate for this exhibition test, not production: web services sleep after 15 minutes without inbound traffic and can take about a minute to wake; the workspace shares 750 free instance hours per month; the free Postgres database expires after 30 days and has no backups; and uploaded listing photos on the service filesystem disappear after a restart or sleep. Open each Render service a few minutes before the demonstration and keep the test data reproducible. Use a paid database/object store and operational backups before serving real customers.
 
@@ -108,11 +109,12 @@ JWT_SECRET=at-least-64-random-characters
 PAYSTACK_SECRET_KEY=sk_test_your_real_test_key
 PAYSTACK_CALLBACK_URL=https://api.example.com/api/payments/paystack/callback
 INTERNAL_API_KEY=another-long-random-secret
-OTP_DELIVERY=brevo
+OTP_DELIVERY=mailjet
 OTP_FROM=your-verified-sender@example.com
 OTP_FROM_NAME=Nearbuy
-BREVO_API_KEY=xkeysib_your_brevo_api_key
-BREVO_API_URL=https://api.brevo.com/v3/smtp/email
+MAILJET_API_KEY=your_mailjet_api_key
+MAILJET_SECRET_KEY=your_mailjet_secret_key
+MAILJET_API_URL=https://api.mailjet.com/v3.1/send
 ```
 
 Generate a JWT secret locally in PowerShell if needed:

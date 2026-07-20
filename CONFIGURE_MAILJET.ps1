@@ -14,7 +14,7 @@ if (-not (Test-Path -LiteralPath $envPath)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($FromEmail)) {
-    $FromEmail = Read-Host 'Enter the exact sender email address verified in Brevo'
+    $FromEmail = Read-Host 'Enter the exact sender email address verified in Mailjet'
 }
 
 try {
@@ -23,24 +23,29 @@ try {
         throw 'Sender must be a plain email address.'
     }
 } catch {
-    throw 'OTP_FROM must be the exact sender email address verified in Brevo.'
+    throw 'OTP_FROM must be the exact sender email address verified in Mailjet.'
 }
 
-$secureKey = Read-Host 'Paste the Brevo API key (input is hidden)' -AsSecureString
-$keyPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
+$secureApiKey = Read-Host 'Paste the Mailjet API key (input is hidden)' -AsSecureString
+$secureSecretKey = Read-Host 'Paste the Mailjet secret key (input is hidden)' -AsSecureString
+$apiKeyPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureApiKey)
+$secretKeyPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureSecretKey)
+
 try {
-    $apiKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($keyPointer)
-    if ([string]::IsNullOrWhiteSpace($apiKey) -or -not $apiKey.StartsWith('xkeysib-')) {
-        throw 'The Brevo API key should start with xkeysib-.'
+    $apiKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($apiKeyPointer)
+    $secretKey = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($secretKeyPointer)
+    if ([string]::IsNullOrWhiteSpace($apiKey) -or [string]::IsNullOrWhiteSpace($secretKey)) {
+        throw 'Both Mailjet keys are required.'
     }
 
     $content = [System.IO.File]::ReadAllText($envPath)
     $settings = [ordered]@{
-        OTP_DELIVERY = 'brevo'
+        OTP_DELIVERY = 'mailjet'
         OTP_FROM = $FromEmail.Trim()
         OTP_FROM_NAME = 'Nearbuy'
-        BREVO_API_KEY = $apiKey
-        BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email'
+        MAILJET_API_KEY = $apiKey
+        MAILJET_SECRET_KEY = $secretKey
+        MAILJET_API_URL = 'https://api.mailjet.com/v3.1/send'
     }
 
     foreach ($setting in $settings.GetEnumerator()) {
@@ -56,14 +61,18 @@ try {
     $utf8WithoutBom = [System.Text.UTF8Encoding]::new($false)
     [System.IO.File]::WriteAllText($envPath, $content, $utf8WithoutBom)
 } finally {
-    if ($keyPointer -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($keyPointer)
+    if ($apiKeyPointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($apiKeyPointer)
+    }
+    if ($secretKeyPointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($secretKeyPointer)
     }
     $apiKey = $null
+    $secretKey = $null
 }
 
-Write-Host 'Brevo settings were saved to the ignored backend/.env file.' -ForegroundColor Green
-Write-Host 'The API key was not printed and will not be committed by Git.'
+Write-Host 'Mailjet settings were saved to the ignored backend/.env file.' -ForegroundColor Green
+Write-Host 'The API keys were not printed and will not be committed by Git.'
 
 if ($Restart) {
     Push-Location $backendDirectory
