@@ -1,36 +1,42 @@
 server:
   port: ${SERVER_PORT:8080}
 
+jwt:
+  secret: ${JWT_SECRET:nearbuy-super-secret-key-change-this-in-production-1234567890}
+  issuer: ${JWT_ISSUER:nearbuy-api}
+
 spring:
   cloud:
     gateway:
-      routes:
-        - id: user-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
-          predicates:
-            - Path=/api/auth/**,/api/users/**,/api/notifications/**
-        - id: listing-service
-          uri: ${LISTING_SERVICE_URL:http://localhost:8082}
-          predicates:
-            - Path=/api/listings/**
-        - id: chat-service
-          uri: ${CHAT_SERVICE_URL:http://localhost:8083}
-          predicates:
-            - Path=/api/chats/**
-        - id: payment-service
-          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
-          predicates:
-            - Path=/api/orders/**,/api/wallet/**,/api/payment-methods/**,/api/reviews/**,/api/payments/**
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
+      server:
+        webflux:
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/auth/**,/api/users/**,/api/notifications/**
+            - id: listing-service
+              uri: ${LISTING_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/listings/**
+            - id: chat-service
+              uri: ${CHAT_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/chats/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/orders/**,/api/wallet/**,/api/payment-methods/**,/api/reviews/**,/api/payments/**
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*}
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: false

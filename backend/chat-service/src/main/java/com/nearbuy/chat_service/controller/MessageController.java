@@ -23,6 +23,8 @@ public class MessageController {
         try {
             Message message = messageService.sendMessage(request, senderId);
             return ResponseEntity.status(HttpStatus.CREATED).body(message);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

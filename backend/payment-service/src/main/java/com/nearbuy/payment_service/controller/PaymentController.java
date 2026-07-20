@@ -9,10 +9,12 @@ import com.nearbuy.payment_service.service.PaymentService;
 import com.nearbuy.payment_service.service.PaystackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.net.URI;
 
 @RestController
 public class PaymentController {
@@ -72,7 +74,10 @@ public class PaymentController {
 
     @GetMapping("/api/wallet/balance")
     public ResponseEntity<WalletBalanceResponse> getBalance(@RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok(new WalletBalanceResponse(paymentService.getWalletBalance(userId)));
+        return ResponseEntity.ok(new WalletBalanceResponse(
+                paymentService.getWalletBalance(userId),
+                paymentService.isSandboxEnabled()
+        ));
     }
 
     @GetMapping("/api/wallet/transactions")
@@ -82,9 +87,11 @@ public class PaymentController {
 
     @PostMapping("/api/orders/{id}/payment/initialize")
     public ResponseEntity<?> initializePayment(@PathVariable Long id,
-                                               @RequestHeader("X-User-Id") Long buyerId) {
+                                               @RequestHeader("X-User-Id") Long buyerId,
+                                               @RequestBody(required = false) InitializePaymentRequest request) {
         try {
-            return ResponseEntity.ok(paystackService.initialize(id, buyerId));
+            Order.PaymentChannel channel = request == null ? null : request.channel();
+            return ResponseEntity.ok(paystackService.initialize(id, buyerId, channel));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (SecurityException e) {
@@ -122,6 +129,27 @@ public class PaymentController {
         }
     }
 
+    @PostMapping("/api/orders/{id}/refund")
+    public ResponseEntity<?> refundOrder(@PathVariable Long id,
+                                         @RequestHeader("X-User-Id") Long buyerId) {
+        try {
+            return ResponseEntity.accepted().body(paymentService.requestRefund(id, buyerId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/api/payments/paystack/callback")
+    public ResponseEntity<Void> paystackCallback() {
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, URI.create("nearbuy://payment-complete").toString())
+                .build();
+    }
+
     @GetMapping("/api/orders/sales")
     public ResponseEntity<List<Order>> getMySales(@RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(paymentService.getMySales(userId));
@@ -134,6 +162,8 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.CREATED).body(paymentService.topUp(userId, request.getAmount()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 
@@ -150,4 +180,5 @@ public class PaymentController {
     }
 
     public record VerifyPaymentRequest(String reference) {}
+    public record InitializePaymentRequest(Order.PaymentChannel channel) {}
 }

@@ -1,5 +1,6 @@
 package com.nearbuy.payment_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -26,6 +27,10 @@ public class PaymentMethod {
     @Column(name = "is_default", nullable = false)
     private boolean defaultMethod;
 
+    @JsonIgnore
+    @Column(name = "paystack_recipient_code", length = 100)
+    private String paystackRecipientCode;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -42,5 +47,8 @@ public class PaymentMethod {
     public void setLastFour(String lastFour) { this.lastFour = lastFour; }
     public boolean isDefaultMethod() { return defaultMethod; }
     public void setDefaultMethod(boolean defaultMethod) { this.defaultMethod = defaultMethod; }
+    public String getPaystackRecipientCode() { return paystackRecipientCode; }
+    public void setPaystackRecipientCode(String paystackRecipientCode) { this.paystackRecipientCode = paystackRecipientCode; }
+    public boolean isPayoutReady() { return paystackRecipientCode != null && !paystackRecipientCode.isBlank(); }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

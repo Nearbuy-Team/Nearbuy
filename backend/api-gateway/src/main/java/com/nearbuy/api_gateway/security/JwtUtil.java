@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtUtil {
@@ -13,14 +14,18 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.issuer:nearbuy-api}")
+    private String issuer;
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes();
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
    public boolean isTokenValid(String token) {
         try {
             Jwts.parser()
+                    .requireIssuer(issuer)
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(token);
@@ -32,6 +37,7 @@ public class JwtUtil {
 
     public Long extractUserId(String token) {
         Object userId = Jwts.parser()
+                .requireIssuer(issuer)
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)

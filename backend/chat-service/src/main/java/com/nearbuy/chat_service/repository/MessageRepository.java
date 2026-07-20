@@ -22,5 +22,17 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             @Param("otherUserId") Long otherUserId
     );
 
+    @Query("""
+            select (count(m) > 0) from Message m
+            where m.listingId = :listingId
+              and ((m.senderId = :firstUserId and m.receiverId = :secondUserId)
+                or (m.senderId = :secondUserId and m.receiverId = :firstUserId))
+            """)
+    boolean conversationExists(
+            @Param("listingId") Long listingId,
+            @Param("firstUserId") Long firstUserId,
+            @Param("secondUserId") Long secondUserId
+    );
+
     List<Message> findBySenderIdOrReceiverIdOrderByCreatedAtDesc(Long senderId, Long receiverId);
 }

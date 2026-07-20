@@ -28,10 +28,24 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       JWT_SECRET: ${JWT_SECRET:-nearbuy-super-secret-key-change-this-in-production-1234567890}
+      JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
       EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-false}
       OTP_DELIVERY: ${OTP_DELIVERY:-email}
-      MAIL_HOST: mailpit
-      MAIL_PORT: 1025
+      OTP_FROM: ${OTP_FROM:-no-reply@nearbuy.local}
+      OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_API_URL: ${MAILJET_API_URL:-https://api.mailjet.com/v3.1/send}
+      MAIL_HOST: ${MAIL_HOST:-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
+      MAIL_STARTTLS_REQUIRED: ${MAIL_STARTTLS_REQUIRED:-false}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       mailpit:
         condition: service_started
@@ -45,6 +59,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       NEARBUY_UPLOAD_DIR: /data/nearbuy-uploads
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     volumes:
       - nearbuy_uploads:/data/nearbuy-uploads
     depends_on:
@@ -59,6 +74,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       LISTING_SERVICE_URL: http://listing-service:8082
       USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,7 +91,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       LISTING_SERVICE_URL: http://listing-service:8082
       USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
+      PAYSTACK_TRANSFERS_ENABLED: ${PAYSTACK_TRANSFERS_ENABLED:-false}
+      PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:-}
+      PAYMENTS_SANDBOX_ENABLED: ${PAYMENTS_SANDBOX_ENABLED:-true}
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,10 +110,13 @@ services:
       - "${GATEWAY_PORT:-8080}:8080"
     environment:
       JWT_SECRET: ${JWT_SECRET:-nearbuy-super-secret-key-change-this-in-production-1234567890}
+      JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
       USER_SERVICE_URL: http://user-service:8081
       LISTING_SERVICE_URL: http://listing-service:8082
       CHAT_SERVICE_URL: http://chat-service:8083
       PAYMENT_SERVICE_URL: http://payment-service:8084
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       user-service:
         condition: service_started

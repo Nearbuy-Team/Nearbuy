@@ -1,5 +1,6 @@
 package com.nearbuy.payment_service.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,10 +44,61 @@ public class Order {
     @Column(name = "payment_reference", unique = true, length = 100)
     private String paymentReference;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_channel", length = 30)
+    private PaymentChannel paymentChannel;
+
+    @JsonIgnore
+    @Column(name = "payment_authorization_url", length = 500)
+    private String paymentAuthorizationUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payout_status", length = 30)
+    private PayoutStatus payoutStatus = PayoutStatus.NOT_STARTED;
+
+    @JsonIgnore
+    @Column(name = "payout_reference", unique = true, length = 100)
+    private String payoutReference;
+
+    @JsonIgnore
+    @Column(name = "payout_transfer_code", length = 100)
+    private String payoutTransferCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "refund_status", length = 30)
+    private RefundStatus refundStatus = RefundStatus.NOT_REQUESTED;
+
+    @JsonIgnore
+    @Column(name = "paystack_refund_id")
+    private Long paystackRefundId;
+
     // --- Enum ---
 
     public enum OrderStatus {
-        PENDING, PAID, COMPLETED, CANCELLED
+        PENDING, PAID, REFUND_PENDING, REFUNDED, COMPLETED, CANCELLED
+    }
+
+    public enum PayoutStatus {
+        NOT_STARTED, PENDING, SUCCESS, FAILED, REVERSED
+    }
+
+    public enum PaymentChannel {
+        MOBILE_MONEY("mobile_money"),
+        CARD("card");
+
+        private final String paystackValue;
+
+        PaymentChannel(String paystackValue) {
+            this.paystackValue = paystackValue;
+        }
+
+        public String paystackValue() {
+            return paystackValue;
+        }
+    }
+
+    public enum RefundStatus {
+        NOT_REQUESTED, PENDING, PROCESSING, NEEDS_ATTENTION, PROCESSED, FAILED
     }
 
     // --- Getters and Setters ---
@@ -119,4 +171,18 @@ public class Order {
     public void setPaymentProvider(String paymentProvider) { this.paymentProvider = paymentProvider; }
     public String getPaymentReference() { return paymentReference; }
     public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
+    public PaymentChannel getPaymentChannel() { return paymentChannel; }
+    public void setPaymentChannel(PaymentChannel paymentChannel) { this.paymentChannel = paymentChannel; }
+    public String getPaymentAuthorizationUrl() { return paymentAuthorizationUrl; }
+    public void setPaymentAuthorizationUrl(String paymentAuthorizationUrl) { this.paymentAuthorizationUrl = paymentAuthorizationUrl; }
+    public PayoutStatus getPayoutStatus() { return payoutStatus == null ? PayoutStatus.NOT_STARTED : payoutStatus; }
+    public void setPayoutStatus(PayoutStatus payoutStatus) { this.payoutStatus = payoutStatus; }
+    public String getPayoutReference() { return payoutReference; }
+    public void setPayoutReference(String payoutReference) { this.payoutReference = payoutReference; }
+    public String getPayoutTransferCode() { return payoutTransferCode; }
+    public void setPayoutTransferCode(String payoutTransferCode) { this.payoutTransferCode = payoutTransferCode; }
+    public RefundStatus getRefundStatus() { return refundStatus == null ? RefundStatus.NOT_REQUESTED : refundStatus; }
+    public void setRefundStatus(RefundStatus refundStatus) { this.refundStatus = refundStatus; }
+    public Long getPaystackRefundId() { return paystackRefundId; }
+    public void setPaystackRefundId(Long paystackRefundId) { this.paystackRefundId = paystackRefundId; }
 }

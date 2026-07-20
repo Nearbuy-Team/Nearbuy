@@ -8,4 +8,10 @@ import java.util.List;
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Long> {
 
     List<WalletTransaction> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    boolean existsByOrderIdAndUserIdAndType(
+            Long orderId,
+            Long userId,
+            WalletTransaction.TransactionType type
+    );
 }

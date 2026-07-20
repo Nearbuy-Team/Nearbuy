@@ -1,0 +1,217 @@
+name: nearbuy-production
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in .env.production}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - nearbuy_caddy_data:/data
+      - nearbuy_caddy_config:/config
+    networks:
+      - edge
+      - backend
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env.production}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+    volumes:
+      - nearbuy_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend
+
+  user-service:
+    build: ./user-service
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.production}
+      JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-true}
+      OTP_DELIVERY: ${OTP_DELIVERY:-mailjet}
+      OTP_FROM: ${OTP_FROM:?Set OTP_FROM in .env.production}
+      OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      MAILJET_API_KEY: ${MAILJET_API_KEY:-}
+      MAILJET_SECRET_KEY: ${MAILJET_SECRET_KEY:-}
+      MAILJET_API_URL: ${MAILJET_API_URL:-https://api.mailjet.com/v3.1/send}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: "true"
+      MAIL_STARTTLS: "true"
+      MAIL_STARTTLS_REQUIRED: "true"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8081"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    networks:
+      - backend
+
+  listing-service:
+    build: ./listing-service
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_DDL_AUTO: update
+      NEARBUY_UPLOAD_DIR: /data/nearbuy-uploads
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
+    volumes:
+      - nearbuy_uploads:/data/nearbuy-uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8082"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    networks:
+      - backend
+
+  chat-service:
+    build: ./chat-service
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_DDL_AUTO: update
+      LISTING_SERVICE_URL: http://listing-service:8082
+      USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      listing-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8083"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    networks:
+      - backend
+
+  payment-service:
+    build: ./payment-service
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_DDL_AUTO: update
+      LISTING_SERVICE_URL: http://listing-service:8082
+      USER_SERVICE_URL: http://user-service:8081
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:?Set PAYSTACK_SECRET_KEY in .env.production}
+      PAYSTACK_TRANSFERS_ENABLED: "true"
+      PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:?Set PAYSTACK_CALLBACK_URL in .env.production}
+      PAYMENTS_SANDBOX_ENABLED: "false"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      listing-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8084"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    networks:
+      - backend
+
+  api-gateway:
+    build: ./api-gateway
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
+      USER_SERVICE_URL: http://user-service:8081
+      LISTING_SERVICE_URL: http://listing-service:8082
+      CHAT_SERVICE_URL: http://chat-service:8083
+      PAYMENT_SERVICE_URL: http://payment-service:8084
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-https://${API_DOMAIN}}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
+    depends_on:
+      user-service:
+        condition: service_healthy
+      listing-service:
+        condition: service_healthy
+      chat-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8080"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+    networks:
+      - backend
+
+networks:
+  edge:
+  backend:
+    internal: true
+
+volumes:
+  nearbuy_pgdata:
+  nearbuy_uploads:
+  nearbuy_caddy_data:
+  nearbuy_caddy_config:

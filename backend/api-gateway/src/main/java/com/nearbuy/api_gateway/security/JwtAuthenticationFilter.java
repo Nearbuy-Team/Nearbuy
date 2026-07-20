@@ -1,6 +1,7 @@
 package com.nearbuy.api_gateway.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -16,6 +17,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Value("${nearbuy.internal-api-key:}")
+    private String internalApiKey;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
@@ -24,9 +28,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 && exchange.getRequest().getMethod().name().equals("GET");
         boolean paystackWebhook = path.equals("/api/payments/paystack/webhook")
                 && exchange.getRequest().getMethod().name().equals("POST");
-        if (path.startsWith("/api/auth/") || publicListingImage || paystackWebhook
+        boolean paystackCallback = path.equals("/api/payments/paystack/callback")
+                && exchange.getRequest().getMethod().name().equals("GET");
+        if (path.startsWith("/api/auth/") || publicListingImage || paystackWebhook || paystackCallback
                 || exchange.getRequest().getMethod().name().equals("OPTIONS")) {
-            return chain.filter(exchange);
+            return chain.filter(withTrustedHeaders(exchange, null));
         }
 
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
@@ -45,14 +51,23 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         Long userId = jwtUtil.extractUserId(token);
 
+        return chain.filter(withTrustedHeaders(exchange, userId));
+    }
+
+    private ServerWebExchange withTrustedHeaders(ServerWebExchange exchange, Long userId) {
         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                 .headers(headers -> {
                     headers.remove("X-User-Id");
-                    headers.set("X-User-Id", String.valueOf(userId));
+                    headers.remove("X-Internal-Api-Key");
+                    if (userId != null) {
+                        headers.set("X-User-Id", String.valueOf(userId));
+                    }
+                    if (internalApiKey != null && !internalApiKey.isBlank()) {
+                        headers.set("X-Internal-Api-Key", internalApiKey);
+                    }
                 })
                 .build();
-
-        return chain.filter(exchange.mutate().request(modifiedRequest).build());
+        return exchange.mutate().request(modifiedRequest).build();
     }
 
     @Override

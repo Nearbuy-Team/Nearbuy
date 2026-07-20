@@ -5,7 +5,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "wallet_transactions")
+@Table(name = "wallet_transactions", uniqueConstraints = @UniqueConstraint(
+        name = "uk_wallet_order_user_type",
+        columnNames = {"order_id", "user_id", "type"}
+))
 public class WalletTransaction {
 
     @Id
@@ -34,7 +37,7 @@ public class WalletTransaction {
     // --- Enum ---
 
     public enum TransactionType {
-        CREDIT, DEBIT, ESCROW_HOLD, ESCROW_RELEASE
+        CREDIT, DEBIT, ESCROW_HOLD, ESCROW_RELEASE, REFUND
     }
 
     // --- Getters and Setters ---

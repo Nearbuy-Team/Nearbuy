@@ -1,0 +1,15 @@
+FROM maven:3.9.11-eclipse-temurin-21-alpine AS build
+WORKDIR /build
+COPY payment-service/pom.xml ./pom.xml
+COPY payment-service/src ./src
+RUN mvn -q -DskipTests package
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S nearbuy && adduser -S nearbuy -G nearbuy
+COPY --from=build --chown=nearbuy:nearbuy /build/target/*.jar app.jar
+COPY --chown=nearbuy:nearbuy render/entrypoint.sh entrypoint.sh
+RUN chmod 0555 entrypoint.sh
+USER nearbuy
+EXPOSE 10000
+ENTRYPOINT ["./entrypoint.sh"]
