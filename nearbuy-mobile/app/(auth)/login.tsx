@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthInput } from '@/components/AuthInput';
 import { useToast } from '@/components/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
+import { ApiError } from '@/lib/api';
 import { useColors, useTheme } from '@/lib/ThemeContext';
 import { FONTS, MODES } from '@/lib/theme';
 
@@ -38,6 +39,23 @@ export default function Login() {
       showToast('Welcome back');
       router.replace('/(tabs)/home');
     } catch (error) {
+      const verificationRequired =
+        error instanceof ApiError &&
+        error.status === 401 &&
+        error.message.toLowerCase().includes('verify your account');
+
+      if (verificationRequired && id.includes('@')) {
+        showToast('Enter the code sent to your email');
+        router.replace({
+          pathname: '/(auth)/verify',
+          params: { email: id.trim().toLowerCase() },
+        });
+        return;
+      }
+      if (verificationRequired) {
+        showToast('Log in with your email address to verify your account');
+        return;
+      }
       showToast(error instanceof Error ? error.message : 'Could not log in');
     } finally {
       setSubmitting(false);

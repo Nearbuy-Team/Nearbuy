@@ -148,9 +148,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       seenOnboarding,
       pendingEmail: pending?.email ?? null,
       login: async (identifier, password) => {
-        const result = await authApi.login(identifier.trim(), password);
-        const current = await usersApi.me(result.token);
-        await persistSession(result.token, current);
+        const normalizedIdentifier = identifier.trim();
+        try {
+          const result = await authApi.login(normalizedIdentifier, password);
+          const current = await usersApi.me(result.token);
+          await persistSession(result.token, current);
+        } catch (error) {
+          const verificationRequired =
+            error instanceof ApiError &&
+            error.status === 401 &&
+            error.message.toLowerCase().includes('verify your account');
+
+          if (verificationRequired && normalizedIdentifier.includes('@')) {
+            setPending({
+              name: '',
+              email: normalizedIdentifier.toLowerCase(),
+              phone: '',
+              password,
+            });
+          }
+          throw error;
+        }
       },
       register: async (fields) => {
         const normalized = { ...fields, email: fields.email.trim().toLowerCase() };
