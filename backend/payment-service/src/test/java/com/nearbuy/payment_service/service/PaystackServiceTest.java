@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -43,6 +44,7 @@ class PaystackServiceTest {
         service = new PaystackService(orderRepository, paymentService, new ObjectMapper());
         ReflectionTestUtils.setField(service, "secretKey", "sk_test_example");
         ReflectionTestUtils.setField(service, "userServiceUrl", "http://user-service");
+        ReflectionTestUtils.setField(service, "internalApiKey", "internal-test-key");
         ReflectionTestUtils.setField(service, "sandboxEnabled", true);
         RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(service, "restTemplate");
         server = MockRestServiceServer.bindTo(restTemplate).build();
@@ -54,6 +56,7 @@ class PaystackServiceTest {
         when(orderRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(order));
         server.expect(once(), requestTo("http://user-service/api/internal/users/3"))
                 .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Api-Key", "internal-test-key"))
                 .andRespond(withSuccess("""
                         {"id":3,"fullName":"Demo Buyer","email":"buyer@nearbuy.test","phone":"0200000001"}
                         """, MediaType.APPLICATION_JSON));

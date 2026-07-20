@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
@@ -27,8 +28,30 @@ class PaystackTransferServiceTest {
         service = new PaystackTransferService();
         ReflectionTestUtils.setField(service, "secretKey", "sk_test_example");
         ReflectionTestUtils.setField(service, "transfersEnabled", true);
+        ReflectionTestUtils.setField(service, "userServiceUrl", "http://user-service");
+        ReflectionTestUtils.setField(service, "internalApiKey", "internal-test-key");
         RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils.getField(service, "restTemplate");
         server = MockRestServiceServer.bindTo(restTemplate).build();
+    }
+
+    @Test
+    void mobileMoneyRecipientLookupUsesInternalAuthentication() {
+        server.expect(once(), requestTo("http://user-service/api/internal/users/7"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("X-Internal-Api-Key", "internal-test-key"))
+                .andRespond(withSuccess("""
+                        {"id":7,"fullName":"Demo Seller","email":"seller@example.com",
+                        "phone":"0551234987"}
+                        """, MediaType.APPLICATION_JSON));
+        server.expect(once(), requestTo("https://api.paystack.co/transferrecipient"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("""
+                        {"status":true,"data":{"recipient_code":"RCP_seller"}}
+                        """, MediaType.APPLICATION_JSON));
+
+        assertThat(service.createMobileMoneyRecipient(7L, "MTN", "0551234987"))
+                .isEqualTo("RCP_seller");
+        server.verify();
     }
 
     @Test

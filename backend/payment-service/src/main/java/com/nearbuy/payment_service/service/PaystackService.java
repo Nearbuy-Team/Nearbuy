@@ -47,6 +47,9 @@ public class PaystackService {
     @Value("${paystack.callback-url:}")
     private String callbackUrl;
 
+    @Value("${nearbuy.internal-api-key:}")
+    private String internalApiKey;
+
     public PaystackService(OrderRepository orderRepository, PaymentService paymentService, ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.paymentService = paymentService;
@@ -83,7 +86,12 @@ public class PaystackService {
 
         InternalUser user;
         try {
-            user = restTemplate.getForObject(userServiceUrl + "/api/internal/users/" + buyerId, InternalUser.class);
+            user = restTemplate.exchange(
+                    userServiceUrl + "/api/internal/users/" + buyerId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(internalServiceHeaders()),
+                    InternalUser.class
+            ).getBody();
         } catch (Exception error) {
             throw new IllegalStateException("Could not load buyer details");
         }
@@ -246,6 +254,13 @@ public class PaystackService {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+    private HttpHeaders internalServiceHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            headers.set("X-Internal-Api-Key", internalApiKey);
+        }
         return headers;
     }
     private boolean validSignature(String payload, String signature) {

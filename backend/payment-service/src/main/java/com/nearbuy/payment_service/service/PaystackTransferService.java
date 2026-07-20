@@ -32,6 +32,9 @@ public class PaystackTransferService {
     @Value("${user-service.url}")
     private String userServiceUrl;
 
+    @Value("${nearbuy.internal-api-key:}")
+    private String internalApiKey;
+
     public PaystackTransferService() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(10_000);
@@ -44,7 +47,12 @@ public class PaystackTransferService {
 
         InternalUser user;
         try {
-            user = restTemplate.getForObject(userServiceUrl + "/api/internal/users/" + userId, InternalUser.class);
+            user = restTemplate.exchange(
+                    userServiceUrl + "/api/internal/users/" + userId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(internalServiceHeaders()),
+                    InternalUser.class
+            ).getBody();
         } catch (Exception error) {
             log.warn("Could not load payout user {}", userId, error);
             throw new IllegalStateException("Could not load your account details");
@@ -195,6 +203,14 @@ public class PaystackTransferService {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(secretKey);
         headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    private HttpHeaders internalServiceHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            headers.set("X-Internal-Api-Key", internalApiKey);
+        }
         return headers;
     }
 
