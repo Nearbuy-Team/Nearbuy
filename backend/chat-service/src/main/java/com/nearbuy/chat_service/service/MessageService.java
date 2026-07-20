@@ -5,6 +5,7 @@ import com.nearbuy.chat_service.model.Message;
 import com.nearbuy.chat_service.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,6 +23,19 @@ public class MessageService {
 
     @Value("${user-service.url}")
     private String userServiceUrl;
+
+    @Value("${nearbuy.internal-api-key:}")
+    private String internalApiKey;
+
+    @PostConstruct
+    void configureInternalAuthentication() {
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            restTemplate.getInterceptors().add((request, body, execution) -> {
+                request.getHeaders().set("X-Internal-Api-Key", internalApiKey);
+                return execution.execute(request, body);
+            });
+        }
+    }
 
    public Message sendMessage(SendMessageRequest request, Long senderId) {
         if (request.getListingId() == null || request.getReceiverId() == null

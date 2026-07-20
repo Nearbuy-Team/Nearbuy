@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
-import { Check, ShieldCheck, X } from 'lucide-react-native';
+import { Check, CreditCard, ShieldCheck, Smartphone, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useColors } from '@/lib/ThemeContext';
 import {
   type ApiListing,
+  type CheckoutPaymentChannel,
   formatGhs,
   listingsApi,
   paymentsApi,
@@ -42,6 +43,7 @@ export default function Checkout() {
   const theme = MODES[mode];
 
   const [step, setStep] = useState<Step>('review');
+  const [paymentChannel, setPaymentChannel] = useState<CheckoutPaymentChannel>('MOBILE_MONEY');
   const [orderRef, setOrderRef] = useState('');
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: number;
@@ -78,7 +80,11 @@ export default function Checkout() {
         );
       } else {
         const created = await paymentsApi.createOrder(token, listing.id);
-        const initialized = await paymentsApi.initializeOrderPayment(token, created.id);
+        const initialized = await paymentsApi.initializeOrderPayment(
+          token,
+          created.id,
+          paymentChannel
+        );
         if (initialized.provider === 'SANDBOX') {
           paid = await paymentsApi.payOrder(token, created.id);
         } else {
@@ -252,38 +258,34 @@ export default function Checkout() {
                 }}>
                 PAYMENT METHOD
               </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  backgroundColor: c.surface,
-                  borderRadius: 16,
-                  padding: 14,
-                  ...SHADOWS.row,
-                }}>
-                <View
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 38,
-                    height: 38,
-                    borderRadius: 11,
-                    backgroundColor: '#FFCC00',
-                  }}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 9, color: '#1A1A1A' }}>
-                    Pay
-                  </Text>
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>
-                    Paystack secure checkout
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>
-                    Choose Mobile Money or card in checkout
-                  </Text>
-                </View>
+              <View style={{ gap: 10 }}>
+                <PaymentOption
+                  title="Mobile Money"
+                  subtitle="Pay with MTN, Telecel or AT Money"
+                  selected={paymentChannel === 'MOBILE_MONEY'}
+                  disabled={Boolean(pendingPayment)}
+                  onPress={() => setPaymentChannel('MOBILE_MONEY')}
+                  icon="mobile-money"
+                />
+                <PaymentOption
+                  title="Debit or credit card"
+                  subtitle="Visa or Mastercard via Paystack"
+                  selected={paymentChannel === 'CARD'}
+                  disabled={Boolean(pendingPayment)}
+                  onPress={() => setPaymentChannel('CARD')}
+                  icon="card"
+                />
               </View>
+              <Text
+                style={{
+                  fontFamily: FONTS.medium,
+                  fontSize: 11,
+                  color: c.muted,
+                  lineHeight: 16,
+                  marginTop: 8,
+                }}>
+                Your payment details are entered securely on Paystack and are not stored by Nearbuy.
+              </Text>
 
               {/* payment protection banner */}
               <View
@@ -494,5 +496,75 @@ function Row({ k, v }: { k: string; v: string }) {
       <Text style={{ fontFamily: FONTS.semibold, fontSize: 12.5, color: c.secondary }}>{k}</Text>
       <Text style={{ fontFamily: FONTS.bold, fontSize: 12.5, color: c.ink }}>{v}</Text>
     </View>
+  );
+}
+
+function PaymentOption({
+  title,
+  subtitle,
+  selected,
+  disabled,
+  onPress,
+  icon,
+}: {
+  title: string;
+  subtitle: string;
+  selected: boolean;
+  disabled: boolean;
+  onPress: () => void;
+  icon: 'mobile-money' | 'card';
+}) {
+  const c = useColors();
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        backgroundColor: c.surface,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: selected ? c.ink : c.border,
+        padding: 14,
+        opacity: disabled ? 0.65 : pressed ? 0.82 : 1,
+        ...SHADOWS.row,
+      })}>
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 38,
+          height: 38,
+          borderRadius: 11,
+          backgroundColor: selected ? c.ink : c.track,
+        }}>
+        {icon === 'mobile-money' ? (
+          <Smartphone size={18} color={selected ? c.surface : c.ink} strokeWidth={2.2} />
+        ) : (
+          <CreditCard size={18} color={selected ? c.surface : c.ink} strokeWidth={2.2} />
+        )}
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>{title}</Text>
+        <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>{subtitle}</Text>
+      </View>
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 21,
+          height: 21,
+          borderRadius: 11,
+          borderWidth: 1.5,
+          borderColor: selected ? c.ink : c.border,
+          backgroundColor: selected ? c.ink : c.surface,
+        }}>
+        {selected && <Check size={13} color={c.surface} strokeWidth={3} />}
+      </View>
+    </Pressable>
   );
 }

@@ -32,6 +32,9 @@ services:
       EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-false}
       OTP_DELIVERY: ${OTP_DELIVERY:-email}
       OTP_FROM: ${OTP_FROM:-no-reply@nearbuy.local}
+      OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
       MAIL_HOST: ${MAIL_HOST:-mailpit}
       MAIL_PORT: ${MAIL_PORT:-1025}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
@@ -39,6 +42,7 @@ services:
       MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
       MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
       MAIL_STARTTLS_REQUIRED: ${MAIL_STARTTLS_REQUIRED:-false}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       mailpit:
         condition: service_started
@@ -52,6 +56,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       NEARBUY_UPLOAD_DIR: /data/nearbuy-uploads
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     volumes:
       - nearbuy_uploads:/data/nearbuy-uploads
     depends_on:
@@ -66,6 +71,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       LISTING_SERVICE_URL: http://listing-service:8082
       USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,6 +88,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
       LISTING_SERVICE_URL: http://listing-service:8082
       USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
       PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-}
       PAYSTACK_TRANSFERS_ENABLED: ${PAYSTACK_TRANSFERS_ENABLED:-false}
       PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:-}
@@ -106,6 +113,7 @@ services:
       CHAT_SERVICE_URL: http://chat-service:8083
       PAYMENT_SERVICE_URL: http://payment-service:8084
       CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
     depends_on:
       user-service:
         condition: service_started

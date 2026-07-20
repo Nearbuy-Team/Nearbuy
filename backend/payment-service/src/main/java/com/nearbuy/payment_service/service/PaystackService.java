@@ -58,17 +58,26 @@ public class PaystackService {
     }
 
     @Transactional
-    public PaymentInitialization initialize(Long orderId, Long buyerId) {
+    public PaymentInitialization initialize(Long orderId, Long buyerId, Order.PaymentChannel selectedChannel) {
         Order order = ownedPendingOrder(orderId, buyerId);
         if (!isConfigured()) {
-            if (sandboxEnabled) return new PaymentInitialization("SANDBOX", null, null);
+            if (sandboxEnabled) {
+                order.setPaymentChannel(selectedChannel);
+                orderRepository.save(order);
+                return new PaymentInitialization("SANDBOX", null, null, selectedChannel);
+            }
             throw new IllegalStateException("Online payments are not configured");
         }
         if (order.getPaymentReference() != null && order.getPaymentAuthorizationUrl() != null) {
+            if (selectedChannel != null && order.getPaymentChannel() != null
+                    && selectedChannel != order.getPaymentChannel()) {
+                throw new IllegalStateException("Payment method cannot be changed after checkout starts");
+            }
             return new PaymentInitialization(
                     "PAYSTACK",
                     order.getPaymentAuthorizationUrl(),
-                    order.getPaymentReference()
+                    order.getPaymentReference(),
+                    order.getPaymentChannel()
             );
         }
 
@@ -87,7 +96,9 @@ public class PaystackService {
         body.put("amount", PaystackAmounts.toMinorUnits(order.getAmount()));
         body.put("currency", "GHS");
         body.put("reference", reference);
-        body.put("channels", List.of("mobile_money", "card"));
+        body.put("channels", selectedChannel == null
+                ? List.of("mobile_money", "card")
+                : List.of(selectedChannel.paystackValue()));
         body.put("metadata", Map.of("order_id", order.getId(), "buyer_id", buyerId));
         if (callbackUrl != null && !callbackUrl.isBlank()) body.put("callback_url", callbackUrl.trim());
         try {
@@ -104,8 +115,9 @@ public class PaystackService {
             order.setPaymentProvider("PAYSTACK");
             order.setPaymentReference(returnedReference);
             order.setPaymentAuthorizationUrl(authorizationUrl);
+            order.setPaymentChannel(selectedChannel);
             orderRepository.save(order);
-            return new PaymentInitialization("PAYSTACK", authorizationUrl, returnedReference);
+            return new PaymentInitialization("PAYSTACK", authorizationUrl, returnedReference, selectedChannel);
         } catch (IllegalStateException error) {
             throw error;
         } catch (Exception error) {
@@ -114,8 +126,9 @@ public class PaystackService {
                 order.setPaymentProvider("SANDBOX");
                 order.setPaymentReference(null);
                 order.setPaymentAuthorizationUrl(null);
+                order.setPaymentChannel(selectedChannel);
                 orderRepository.save(order);
-                return new PaymentInitialization("SANDBOX", null, null);
+                return new PaymentInitialization("SANDBOX", null, null, selectedChannel);
             }
             throw new IllegalStateException("Paystack checkout is temporarily unavailable");
         }
@@ -209,6 +222,10 @@ public class PaystackService {
         }
         if (!reference.equals(data.path("reference").asText())) throw new IllegalStateException("Payment reference mismatch");
         if (!"GHS".equals(data.path("currency").asText())) throw new IllegalStateException("Payment currency mismatch");
+        if (order.getPaymentChannel() != null
+                && !order.getPaymentChannel().paystackValue().equals(data.path("channel").asText())) {
+            throw new IllegalStateException("Payment channel mismatch");
+        }
         if (data.path("amount").asLong(-1) != PaystackAmounts.toMinorUnits(order.getAmount())) {
             throw new IllegalStateException("Payment amount mismatch");
         }
@@ -243,6 +260,9 @@ public class PaystackService {
         }
     }
 
-    public record PaymentInitialization(String provider, String authorizationUrl, String reference) {}
+    public record PaymentInitialization(String provider,
+                                        String authorizationUrl,
+                                        String reference,
+                                        Order.PaymentChannel channel) {}
     private record InternalUser(Long id, String fullName, String email, String phone) {}
 }

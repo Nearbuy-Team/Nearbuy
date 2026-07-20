@@ -179,7 +179,15 @@ Write-Host 'Nearbuy is ready.' -ForegroundColor Green
 Write-Host 'Buyer:  buyer@nearbuy.test / Nearbuy123!'
 Write-Host 'Seller: seller@nearbuy.test / Nearbuy123!'
 Write-Host "API:    http://${lanIp}:8080"
-Write-Host 'Mailpit: http://localhost:8025'
+$otpDelivery = Get-DotEnvValue 'OTP_DELIVERY'
+$mailHost = Get-DotEnvValue 'MAIL_HOST'
+if ($otpDelivery -eq 'brevo') {
+    Write-Host 'Email:  Brevo real-inbox delivery'
+} elseif ($otpDelivery -in @('email', 'smtp') -and $mailHost -ne 'mailpit') {
+    Write-Host 'Email:  SMTP real-inbox delivery'
+} else {
+    Write-Host 'Mailpit: http://localhost:8025'
+}
 Write-Host ''
 Write-Host 'Keep this window open and scan the QR code with the iPhone Camera or Expo Go.'
 Write-Host 'When finished, press Ctrl+C and run .\STOP_EXHIBITION.ps1 from the repository root.'

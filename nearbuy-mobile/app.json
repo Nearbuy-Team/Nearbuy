@@ -4,11 +4,7 @@
     "slug": "nearbuy",
     "version": "1.0.0",
     "scheme": "nearbuy",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -25,7 +21,15 @@
           "microphonePermission": false
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -39,9 +43,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nearbuy.marketplace"

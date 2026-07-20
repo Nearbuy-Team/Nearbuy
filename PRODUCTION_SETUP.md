@@ -1,6 +1,6 @@
 # Nearbuy production setup
 
-This guide covers the real Paystack test/live flow, an online Docker deployment, and installable Expo builds.
+This guide covers a free Render exhibition deployment, the real Paystack test/live flow, an online Docker deployment, and installable Expo builds.
 
 ## What is implemented
 
@@ -24,7 +24,7 @@ Docker is not an online backend. Docker packages PostgreSQL and the five backend
 1. A Ghana Paystack business account. Complete business activation before using live keys.
 2. A Linux VPS or cloud VM with a public IPv4 address. Use at least 2 vCPU, 4 GB RAM, and 30 GB storage if the server will build all Java images itself.
 3. A domain or subdomain such as `api.example.com`.
-4. An SMTP account for real OTP email delivery.
+4. A Brevo account with a verified sender and API key for real OTP email delivery.
 5. An Expo account for EAS cloud builds.
 6. Apple Developer membership for physical-device iOS distribution or TestFlight.
 7. Google Play Console registration only when publishing the Android App Bundle to Google Play; it is not needed for a shareable preview APK.
@@ -43,9 +43,50 @@ In Paystack Dashboard, open **Settings > API Keys & Webhooks**.
 3. Ensure Transfers is available for the Ghana business. For automated payouts, complete Paystack's process for disabling transfer OTP; otherwise a transfer can remain in the OTP state.
 4. Keep the account in test mode until collection, refund, and payout webhooks all pass.
 
-The backend accepts Ghana Mobile Money and cards through Paystack Checkout. It uses `MTN`, `ATL`, and `VOD` recipient codes for MTN, AT, and Telecel payouts.
+The buyer explicitly chooses Mobile Money or card in Nearbuy. The backend restricts Paystack Checkout to that selected channel. It uses `MTN`, `ATL`, and `VOD` recipient codes for MTN, AT, and Telecel seller payouts.
 
-## 2. Put the backend on a server
+## 2A. Free exhibition deployment on Render
+
+Use this option to make the APK work over Wi-Fi or mobile data without keeping the laptop on the same network. The repository's root `render.yaml` creates five Docker web services and one PostgreSQL database in Frankfurt. Render terminates TLS, so the public gateway receives an `https://...onrender.com` address automatically.
+
+1. Push the current repository to GitHub.
+2. Sign in at [dashboard.render.com](https://dashboard.render.com/), choose **New > Blueprint**, connect the `Nearbuy-Team/Nearbuy` repository, select `main`, and use the root `render.yaml`.
+3. Keep every declared resource on the **Free** plan. At the secret prompts enter:
+
+   ```text
+   OTP_FROM = the exact sender email verified in Brevo
+   BREVO_API_KEY = the private xkeysib-... Brevo API key
+   PAYSTACK_SECRET_KEY = your sk_test_... Paystack key
+   ```
+
+4. Apply the Blueprint and wait for all six resources to finish. The public app URL is the API gateway URL, expected to be:
+
+   ```text
+   https://nearbuy-api-7c197b38.onrender.com
+   ```
+
+   Copy the actual hostname from Render if it differs.
+
+5. In Paystack **Settings > API Keys & Webhooks**, set the test webhook to:
+
+   ```text
+   https://nearbuy-api-7c197b38.onrender.com/api/payments/paystack/webhook
+   ```
+
+6. Rebuild the Android APK against that HTTPS API:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\BUILD_ANDROID_APK.ps1 `
+     -ApiUrl https://nearbuy-api-7c197b38.onrender.com
+   ```
+
+7. Install the new APK and test registration, email verification, login, one Paystack test purchase, refund, and completion before exhibition day.
+
+The generated internal API key prevents clients from bypassing the gateway and forging identity headers. Render's database connection is converted to JDBC at container startup, and Brevo uses HTTPS rather than blocked SMTP ports.
+
+Render Free is appropriate for this exhibition test, not production: web services sleep after 15 minutes without inbound traffic and can take about a minute to wake; the workspace shares 750 free instance hours per month; the free Postgres database expires after 30 days and has no backups; and uploaded listing photos on the service filesystem disappear after a restart or sleep. Open each Render service a few minutes before the demonstration and keep the test data reproducible. Use a paid database/object store and operational backups before serving real customers.
+
+## 2B. Put the backend on your own server
 
 First point the DNS `A` record for `api.example.com` to the VPS public IPv4 address. Open inbound TCP ports 22, 80, and 443, plus UDP 443 for HTTP/3. Do not expose PostgreSQL port 5432.
 
@@ -66,10 +107,12 @@ POSTGRES_PASSWORD=a-long-random-password
 JWT_SECRET=at-least-64-random-characters
 PAYSTACK_SECRET_KEY=sk_test_your_real_test_key
 PAYSTACK_CALLBACK_URL=https://api.example.com/api/payments/paystack/callback
-OTP_FROM=no-reply@example.com
-MAIL_HOST=smtp.example.com
-MAIL_USERNAME=your-smtp-user
-MAIL_PASSWORD=your-smtp-password
+INTERNAL_API_KEY=another-long-random-secret
+OTP_DELIVERY=brevo
+OTP_FROM=your-verified-sender@example.com
+OTP_FROM_NAME=Nearbuy
+BREVO_API_KEY=xkeysib_your_brevo_api_key
+BREVO_API_URL=https://api.brevo.com/v3/smtp/email
 ```
 
 Generate a JWT secret locally in PowerShell if needed:

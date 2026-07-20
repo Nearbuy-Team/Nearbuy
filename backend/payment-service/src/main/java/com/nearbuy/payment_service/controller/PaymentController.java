@@ -87,9 +87,11 @@ public class PaymentController {
 
     @PostMapping("/api/orders/{id}/payment/initialize")
     public ResponseEntity<?> initializePayment(@PathVariable Long id,
-                                               @RequestHeader("X-User-Id") Long buyerId) {
+                                               @RequestHeader("X-User-Id") Long buyerId,
+                                               @RequestBody(required = false) InitializePaymentRequest request) {
         try {
-            return ResponseEntity.ok(paystackService.initialize(id, buyerId));
+            Order.PaymentChannel channel = request == null ? null : request.channel();
+            return ResponseEntity.ok(paystackService.initialize(id, buyerId, channel));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (SecurityException e) {
@@ -178,4 +180,5 @@ public class PaymentController {
     }
 
     public record VerifyPaymentRequest(String reference) {}
+    public record InitializePaymentRequest(Order.PaymentChannel channel) {}
 }

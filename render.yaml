@@ -1,0 +1,194 @@
+services:
+  - type: web
+    name: nearbuy-user-7c197b38
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/render/Dockerfile.user-service
+    dockerContext: ./backend
+    envVars:
+      - fromGroup: nearbuy-shared
+      - key: SERVER_PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nearbuy-db-7c197b38
+          property: connectionString
+      - key: SPRING_JPA_DDL_AUTO
+        value: update
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: 3
+      - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+        value: 0
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
+      - key: OTP_DELIVERY
+        value: brevo
+      - key: OTP_FROM_NAME
+        value: Nearbuy
+      - key: OTP_FROM
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EXPO_PUSH_ENABLED
+        value: "false"
+
+  - type: web
+    name: nearbuy-listing-7c197b38
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/render/Dockerfile.listing-service
+    dockerContext: ./backend
+    envVars:
+      - fromGroup: nearbuy-shared
+      - key: SERVER_PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nearbuy-db-7c197b38
+          property: connectionString
+      - key: SPRING_JPA_DDL_AUTO
+        value: update
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: 3
+      - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+        value: 0
+      - key: NEARBUY_UPLOAD_DIR
+        value: /tmp/nearbuy-uploads
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
+
+  - type: web
+    name: nearbuy-chat-7c197b38
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/render/Dockerfile.chat-service
+    dockerContext: ./backend
+    envVars:
+      - fromGroup: nearbuy-shared
+      - key: SERVER_PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nearbuy-db-7c197b38
+          property: connectionString
+      - key: SPRING_JPA_DDL_AUTO
+        value: update
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: 3
+      - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+        value: 0
+      - key: LISTING_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-listing-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: USER_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-user-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
+
+  - type: web
+    name: nearbuy-payment-7c197b38
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/render/Dockerfile.payment-service
+    dockerContext: ./backend
+    envVars:
+      - fromGroup: nearbuy-shared
+      - key: SERVER_PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nearbuy-db-7c197b38
+          property: connectionString
+      - key: SPRING_JPA_DDL_AUTO
+        value: update
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: 3
+      - key: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
+        value: 0
+      - key: LISTING_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-listing-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: USER_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-user-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: GATEWAY_HOST
+        fromService:
+          type: web
+          name: nearbuy-api-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_TRANSFERS_ENABLED
+        value: "false"
+      - key: PAYMENTS_SANDBOX_ENABLED
+        value: "false"
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
+
+  - type: web
+    name: nearbuy-api-7c197b38
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/render/Dockerfile.api-gateway
+    dockerContext: ./backend
+    envVars:
+      - fromGroup: nearbuy-shared
+      - key: SERVER_PORT
+        value: 10000
+      - key: USER_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-user-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: LISTING_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-listing-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: CHAT_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-chat-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: PAYMENT_SERVICE_HOST
+        fromService:
+          type: web
+          name: nearbuy-payment-7c197b38
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: CORS_ALLOWED_ORIGIN_PATTERNS
+        value: "*"
+      - key: JAVA_TOOL_OPTIONS
+        value: -XX:MaxRAMPercentage=70.0 -XX:+UseSerialGC -XX:ActiveProcessorCount=2
+
+databases:
+  - name: nearbuy-db-7c197b38
+    databaseName: nearbuy
+    user: nearbuy
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"
+    ipAllowList: []
+
+envVarGroups:
+  - name: nearbuy-shared
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: nearbuy-api
+      - key: INTERNAL_API_KEY
+        generateValue: true

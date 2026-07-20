@@ -1,61 +1,46 @@
 # OTP and password-reset email
 
-Nearbuy sends a six-digit email code for account verification and password reset. Codes are stored only as password hashes, expire after 10 minutes, allow five attempts, and can be resent after 60 seconds.
+Nearbuy sends a six-digit code for account verification and password reset. Codes are stored only as password hashes, expire after 10 minutes, allow five attempts, and can be resent after 60 seconds.
 
-## Local and exhibition testing
+## Local testing with Mailpit
 
-The default Docker setup sends mail to Mailpit, so it works without an external email account or internet connection.
+The default Docker setup captures messages in Mailpit, so local testing works without an email account or internet connection.
 
 1. Start Nearbuy with `START_EXHIBITION.ps1` or Docker Compose.
-2. Register or press **Forgot?** in the mobile app.
+2. Register or press **Forgot?** in the app.
 3. Open `http://localhost:8025` on the laptop.
-4. Open the Nearbuy message and enter its six-digit code in the app.
+4. Open the Nearbuy message and enter its six-digit code.
 
-Mailpit is a local test inbox. It does not deliver messages to Gmail, Outlook, or another real inbox.
+Mailpit does not deliver to a real inbox.
 
-## Quick real-inbox testing with Gmail
+## Real delivery with Brevo
 
-For a small exhibition test, a Gmail account can send the messages without buying a domain. Turn on 2-Step Verification for that Google account, create a 16-character App Password, and use the App Password rather than the normal account password:
+Brevo's HTTPS transactional-email API is the configured hosted option. This is important on Render because Render's free web services block outbound SMTP ports. Brevo's Free plan currently includes 300 email sends per day, which is enough for exhibition OTP tests.
 
-```dotenv
-OTP_DELIVERY=email
-OTP_FROM=youraccount@gmail.com
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=youraccount@gmail.com
-MAIL_PASSWORD=your_16_character_app_password
-MAIL_SMTP_AUTH=true
-MAIL_STARTTLS=true
-MAIL_STARTTLS_REQUIRED=true
+1. Create a free Brevo account at [brevo.com](https://www.brevo.com/).
+2. In Brevo, open **Settings > Senders, Domains & Dedicated IPs > Senders** and add a sender address. Complete the verification email.
+3. Open **Settings > SMTP & API > API Keys**, create an API key, and copy it once.
+4. For local Docker testing, run:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_BREVO.ps1 -Restart
+   ```
+
+   Enter the exact verified sender and paste the hidden `xkeysib-...` API key when prompted.
+
+5. Register with a new address you can access, then test **Forgot password** with that address.
+
+For Render, enter the same values in the Blueprint prompts:
+
+```text
+OTP_FROM = the exact verified sender address
+BREVO_API_KEY = the private xkeysib-... API key
 ```
 
-Use a dedicated project Gmail account rather than a personal account. This option is suitable for a small demonstration, not public production or bulk mail. Google documents App Password requirements in [Sign in with app passwords](https://support.google.com/accounts/answer/185833).
+Do not put the API key in `nearbuy-mobile/.env`, `render.yaml`, source code, screenshots, or Git. If delivery fails, inspect **Transactional > Logs** in Brevo and the user-service logs in Render. Check spam during the first tests; a properly authenticated custom domain improves deliverability but is not required for a short exhibition test.
 
-## Real inbox delivery with Resend
+Official references: [Brevo transactional email API](https://developers.brevo.com/docs/send-a-transactional-email), [Brevo Free plan](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan), and [sender/domain authentication](https://help.brevo.com/hc/en-us/articles/14925263522578-Comply-with-Gmail-Yahoo-and-Microsoft-s-requirements-for-email-senders).
 
-Resend provides SMTP delivery and a free transactional-email tier. Verify a domain in Resend and create an API key, then change these values in the ignored `backend/.env` file:
+## SMTP remains available off Render
 
-```dotenv
-OTP_DELIVERY=email
-OTP_FROM=no-reply@your-verified-domain.com
-MAIL_HOST=smtp.resend.com
-MAIL_PORT=587
-MAIL_USERNAME=resend
-MAIL_PASSWORD=re_your_private_api_key
-MAIL_SMTP_AUTH=true
-MAIL_STARTTLS=true
-MAIL_STARTTLS_REQUIRED=true
-```
-
-Never put the API key in the mobile `.env`, source code, screenshots, or Git. Recreate the user service after changing SMTP settings:
-
-```powershell
-Set-Location backend
-docker compose --env-file .env up -d --force-recreate user-service
-docker compose --env-file .env restart api-gateway
-Set-Location ..
-```
-
-Create a new account using an email address you can access. The verification message should arrive in that inbox. Test **Forgot?** as well before relying on it publicly.
-
-Official references: [Resend SMTP settings](https://resend.com/docs/send-with-smtp) and [Resend pricing](https://resend.com/docs/knowledge-base/what-is-resend-pricing).
+`OTP_DELIVERY=email` or `OTP_DELIVERY=smtp` still uses the `MAIL_*` variables for Mailpit, Gmail App Passwords, or another SMTP provider. Do not select SMTP for a free Render service because ports 25, 465, and 587 are blocked there.

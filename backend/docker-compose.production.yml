@@ -53,15 +53,19 @@ services:
       JWT_ISSUER: ${JWT_ISSUER:-nearbuy-api}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       EXPO_PUSH_ENABLED: ${EXPO_PUSH_ENABLED:-true}
-      OTP_DELIVERY: email
+      OTP_DELIVERY: ${OTP_DELIVERY:-brevo}
       OTP_FROM: ${OTP_FROM:?Set OTP_FROM in .env.production}
-      MAIL_HOST: ${MAIL_HOST:?Set MAIL_HOST in .env.production}
+      OTP_FROM_NAME: ${OTP_FROM_NAME:-Nearbuy}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
       MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:?Set MAIL_USERNAME in .env.production}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:?Set MAIL_PASSWORD in .env.production}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_SMTP_AUTH: "true"
       MAIL_STARTTLS: "true"
       MAIL_STARTTLS_REQUIRED: "true"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,6 +90,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_DDL_AUTO: update
       NEARBUY_UPLOAD_DIR: /data/nearbuy-uploads
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
     volumes:
       - nearbuy_uploads:/data/nearbuy-uploads
     depends_on:
@@ -113,6 +118,7 @@ services:
       SPRING_JPA_DDL_AUTO: update
       LISTING_SERVICE_URL: http://listing-service:8082
       USER_SERVICE_URL: http://user-service:8081
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,6 +152,7 @@ services:
       PAYSTACK_TRANSFERS_ENABLED: "true"
       PAYSTACK_CALLBACK_URL: ${PAYSTACK_CALLBACK_URL:?Set PAYSTACK_CALLBACK_URL in .env.production}
       PAYMENTS_SANDBOX_ENABLED: "false"
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
     depends_on:
       postgres:
         condition: service_healthy
@@ -176,6 +183,7 @@ services:
       CHAT_SERVICE_URL: http://chat-service:8083
       PAYMENT_SERVICE_URL: http://payment-service:8084
       CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-https://${API_DOMAIN}}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY in .env.production}
     depends_on:
       user-service:
         condition: service_healthy

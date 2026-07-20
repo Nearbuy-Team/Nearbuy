@@ -28,4 +28,4 @@ Important behavior:
 - Payment, refund, and payout handlers validate references, GHS amounts, and currencies and use database locks/idempotent ledger records.
 - Seller payout methods saved before transfers are configured do not have a Paystack recipient code and must be re-added.
 
-The included production stack is deployable, but public real-money operation still requires Paystack activation, SMTP, a domain/VPS, monitoring, backups, support procedures, legal review, and independent security testing.
+The included production stack is deployable, but public real-money operation still requires Paystack activation, a transactional-email provider, hosted infrastructure, monitoring, backups, support procedures, legal review, and independent security testing.

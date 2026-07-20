@@ -1,5 +1,6 @@
 /.vscode/
 *.log
+/artifacts/
 .env
 .env.*
 !.env.example

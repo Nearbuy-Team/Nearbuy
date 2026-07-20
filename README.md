@@ -45,6 +45,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\START_EXHIBITION.ps1 -
 
 The exhibition launcher refuses live Paystack keys. Do not use real customer money in a demonstration.
 
+To send registration and password-reset codes to real inboxes, first verify a sender and create an API key in Brevo. Then run this once; the API key prompt is hidden:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\CONFIGURE_BREVO.ps1 -Restart
+```
+
+For an installable Android exhibition build, run `BUILD_ANDROID_APK.ps1`. It detects the current laptop LAN address, stores it in the EAS preview environment, and creates an APK. Rebuild if the laptop's LAN address changes. To make the APK work on any internet connection, deploy `render.yaml` and rebuild with `-ApiUrl https://YOUR-API.onrender.com`.
+
 When finished, press `Ctrl+C`, open PowerShell in the repository root, and run:
 
 ```powershell
@@ -147,8 +155,8 @@ backend\api-gateway\mvnw.cmd test
 
 Additional service details are available in [backend/HANDOFF.md](backend/HANDOFF.md) and [nearbuy-mobile/README.md](nearbuy-mobile/README.md).
 
-OTP verification and password reset work through email. The local stack captures messages in Mailpit; follow [EMAIL_SETUP.md](EMAIL_SETUP.md) to deliver them to real inboxes through SMTP.
+OTP verification and password reset work through email. The local stack captures messages in Mailpit; follow [EMAIL_SETUP.md](EMAIL_SETUP.md) to deliver them to real inboxes through Brevo's HTTPS API.
 
 ## Real payments, deployment, APK, and iOS
 
-Use [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the complete Paystack test/live checklist, online Docker deployment, Expo Go testing, Android APK/App Bundle builds, iOS ad hoc/TestFlight builds, backups, and live-launch gates.
+Use [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for the Render exhibition deployment, complete Paystack test/live checklist, online Docker deployment, Expo Go testing, Android APK/App Bundle builds, iOS ad hoc/TestFlight builds, backups, and live-launch gates.

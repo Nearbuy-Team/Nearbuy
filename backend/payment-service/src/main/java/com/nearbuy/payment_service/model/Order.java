@@ -44,6 +44,10 @@ public class Order {
     @Column(name = "payment_reference", unique = true, length = 100)
     private String paymentReference;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_channel", length = 30)
+    private PaymentChannel paymentChannel;
+
     @JsonIgnore
     @Column(name = "payment_authorization_url", length = 500)
     private String paymentAuthorizationUrl;
@@ -76,6 +80,21 @@ public class Order {
 
     public enum PayoutStatus {
         NOT_STARTED, PENDING, SUCCESS, FAILED, REVERSED
+    }
+
+    public enum PaymentChannel {
+        MOBILE_MONEY("mobile_money"),
+        CARD("card");
+
+        private final String paystackValue;
+
+        PaymentChannel(String paystackValue) {
+            this.paystackValue = paystackValue;
+        }
+
+        public String paystackValue() {
+            return paystackValue;
+        }
     }
 
     public enum RefundStatus {
@@ -152,6 +171,8 @@ public class Order {
     public void setPaymentProvider(String paymentProvider) { this.paymentProvider = paymentProvider; }
     public String getPaymentReference() { return paymentReference; }
     public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
+    public PaymentChannel getPaymentChannel() { return paymentChannel; }
+    public void setPaymentChannel(PaymentChannel paymentChannel) { this.paymentChannel = paymentChannel; }
     public String getPaymentAuthorizationUrl() { return paymentAuthorizationUrl; }
     public void setPaymentAuthorizationUrl(String paymentAuthorizationUrl) { this.paymentAuthorizationUrl = paymentAuthorizationUrl; }
     public PayoutStatus getPayoutStatus() { return payoutStatus == null ? PayoutStatus.NOT_STARTED : payoutStatus; }

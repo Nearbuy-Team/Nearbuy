@@ -163,6 +163,7 @@ export interface ApiOrder {
   createdAt: string;
   paymentProvider: string | null;
   paymentReference: string | null;
+  paymentChannel: CheckoutPaymentChannel | null;
   payoutStatus: PayoutStatus;
   refundStatus: RefundStatus;
 }
@@ -199,6 +200,8 @@ export interface ApiPaymentMethod {
   payoutReady: boolean;
   createdAt: string;
 }
+
+export type CheckoutPaymentChannel = 'MOBILE_MONEY' | 'CARD';
 
 export interface ApiReview {
   id: number;
@@ -286,12 +289,17 @@ export const paymentsApi = {
     apiRequest<ApiOrder>('/api/orders', { method: 'POST', token, body: { listingId } }),
   payOrder: (token: string, orderId: number) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/pay`, { method: 'POST', token }),
-  initializeOrderPayment: (token: string, orderId: number) =>
+  initializeOrderPayment: (token: string, orderId: number, channel: CheckoutPaymentChannel) =>
     apiRequest<{
       provider: 'SANDBOX' | 'PAYSTACK';
       authorizationUrl: string | null;
       reference: string | null;
-    }>(`/api/orders/${orderId}/payment/initialize`, { method: 'POST', token }),
+      channel: CheckoutPaymentChannel;
+    }>(`/api/orders/${orderId}/payment/initialize`, {
+      method: 'POST',
+      token,
+      body: { channel },
+    }),
   verifyOrderPayment: (token: string, orderId: number, reference: string) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/payment/verify`, {
       method: 'POST',

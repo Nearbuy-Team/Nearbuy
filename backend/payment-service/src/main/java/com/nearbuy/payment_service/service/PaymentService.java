@@ -8,6 +8,7 @@ import com.nearbuy.payment_service.repository.OrderRepository;
 import com.nearbuy.payment_service.repository.PaymentMethodRepository;
 import com.nearbuy.payment_service.repository.WalletTransactionRepository;
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,9 @@ public class PaymentService {
     @Value("${payments.sandbox-enabled:true}")
     private boolean sandboxEnabled;
 
+    @Value("${nearbuy.internal-api-key:}")
+    private String internalApiKey;
+
     private final RestTemplate restTemplate = createRestTemplate();
 
     public PaymentService(OrderRepository orderRepository,
@@ -47,6 +51,16 @@ public class PaymentService {
         this.paymentMethodRepository = paymentMethodRepository;
         this.paystackTransferService = paystackTransferService;
         this.paystackRefundService = paystackRefundService;
+    }
+
+    @PostConstruct
+    void configureInternalAuthentication() {
+        if (internalApiKey != null && !internalApiKey.isBlank()) {
+            restTemplate.getInterceptors().add((request, body, execution) -> {
+                request.getHeaders().set("X-Internal-Api-Key", internalApiKey);
+                return execution.execute(request, body);
+            });
+        }
     }
 
     private static RestTemplate createRestTemplate() {

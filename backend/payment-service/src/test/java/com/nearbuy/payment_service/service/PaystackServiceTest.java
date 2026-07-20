@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -63,15 +64,23 @@ class PaystackServiceTest {
         server.expect(once(), requestTo("https://api.paystack.co/transaction/initialize"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(jsonPath("$.email").value("customer@email.com"))
+                .andExpect(jsonPath("$.channels.length()").value(1))
+                .andExpect(jsonPath("$.channels[0]").value("card"))
                 .andRespond(withSuccess("""
                         {"status":true,"data":{"authorization_url":"https://checkout.paystack.com/test",
                         "reference":"NB-20-test"}}
                         """, MediaType.APPLICATION_JSON));
 
-        PaystackService.PaymentInitialization result = service.initialize(20L, 3L);
+        PaystackService.PaymentInitialization result = service.initialize(
+                20L,
+                3L,
+                Order.PaymentChannel.CARD
+        );
 
         assertThat(result.provider()).isEqualTo("PAYSTACK");
         assertThat(result.reference()).isEqualTo("NB-20-test");
+        assertThat(result.channel()).isEqualTo(Order.PaymentChannel.CARD);
+        assertThat(order.getPaymentChannel()).isEqualTo(Order.PaymentChannel.CARD);
         server.verify();
     }
 
@@ -80,7 +89,11 @@ class PaystackServiceTest {
         server.expect(once(), requestTo("https://api.paystack.co/transaction/initialize"))
                 .andRespond(withServerError());
 
-        PaystackService.PaymentInitialization result = service.initialize(20L, 3L);
+        PaystackService.PaymentInitialization result = service.initialize(
+                20L,
+                3L,
+                Order.PaymentChannel.MOBILE_MONEY
+        );
 
         assertThat(result.provider()).isEqualTo("SANDBOX");
         assertThat(order.getPaymentProvider()).isEqualTo("SANDBOX");
@@ -94,11 +107,42 @@ class PaystackServiceTest {
         server.expect(once(), requestTo("https://api.paystack.co/transaction/initialize"))
                 .andRespond(withServerError());
 
-        assertThatThrownBy(() -> service.initialize(20L, 3L))
+        assertThatThrownBy(() -> service.initialize(20L, 3L, Order.PaymentChannel.CARD))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Paystack checkout is temporarily unavailable");
 
         assertThat(order.getPaymentProvider()).isNull();
+        server.verify();
+    }
+
+    @Test
+    void cannotChangeChannelAfterCheckoutStarts() {
+        order.setPaymentReference("NB-20-existing");
+        order.setPaymentAuthorizationUrl("https://checkout.paystack.com/existing");
+        order.setPaymentChannel(Order.PaymentChannel.CARD);
+
+        assertThatThrownBy(() -> service.initialize(20L, 3L, Order.PaymentChannel.MOBILE_MONEY))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Payment method cannot be changed after checkout starts");
+    }
+
+    @Test
+    void rejectsAConfirmedPaymentFromTheWrongChannel() {
+        server.reset();
+        reset(orderRepository);
+        order.setPaymentReference("NB-20-test");
+        order.setPaymentChannel(Order.PaymentChannel.CARD);
+        when(orderRepository.findById(20L)).thenReturn(Optional.of(order));
+        server.expect(once(), requestTo("https://api.paystack.co/transaction/verify/NB-20-test"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("""
+                        {"status":true,"data":{"status":"success","reference":"NB-20-test",
+                        "amount":10000,"currency":"GHS","channel":"mobile_money"}}
+                        """, MediaType.APPLICATION_JSON));
+
+        assertThatThrownBy(() -> service.verify(20L, 3L, "NB-20-test"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Payment channel mismatch");
         server.verify();
     }
 }
