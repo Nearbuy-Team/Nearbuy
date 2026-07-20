@@ -69,7 +69,7 @@ export default function Profile() {
         contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 110 }}>
         {/* header card */}
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', 
+          style={{ flexDirection: 'row', alignItems: 'center',
             gap: 15,
             backgroundColor: c.surface,
             borderRadius: 22,
@@ -78,7 +78,7 @@ export default function Profile() {
             ...SHADOWS.card,
           }}>
           <View
-            style={{ alignItems: 'center', justifyContent: 'center', 
+            style={{ alignItems: 'center', justifyContent: 'center',
               width: 60,
               height: 60,
               borderRadius: 20,
@@ -101,7 +101,7 @@ export default function Profile() {
 
             {/* verified pill */}
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', 
+              style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
                 gap: 4,
                 marginTop: 8,
                 backgroundColor: theme.tagBg,
@@ -136,7 +136,7 @@ export default function Profile() {
                 ...SHADOWS.row,
               })}>
               <View
-                style={{ alignItems: 'center', justifyContent: 'center', 
+                style={{ alignItems: 'center', justifyContent: 'center',
                   width: 34,
                   height: 34,
                   borderRadius: 10,

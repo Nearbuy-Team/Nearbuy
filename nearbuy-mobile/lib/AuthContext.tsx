@@ -31,7 +31,6 @@ interface AuthContextValue {
   isLoading: boolean;
   seenOnboarding: boolean;
   pendingEmail: string | null;
-  pendingPhone: string | null;
   login: (idOrEmail: string, password: string) => Promise<void>;
   register: (fields: RegisterFields) => Promise<void>;
   verifyOtp: (code: string) => Promise<void>;
@@ -39,6 +38,7 @@ interface AuthContextValue {
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   refreshUser: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
 }
@@ -148,11 +148,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       seenOnboarding,
       pendingEmail: pending?.email ?? null,
-      pendingPhone: pending?.phone ?? null,
       login: async (identifier, password) => {
-        const result = await authApi.login(identifier.trim(), password);
-        const current = await usersApi.me(result.token);
-        await persistSession(result.token, current);
+        const normalizedIdentifier = identifier.trim();
+        try {
+          const result = await authApi.login(normalizedIdentifier, password);
+          const current = await usersApi.me(result.token);
+          await persistSession(result.token, current);
+        } catch (error) {
+          const verificationRequired =
+            error instanceof ApiError &&
+            error.status === 401 &&
+            error.message.toLowerCase().includes('verify your account');
+
+          if (verificationRequired && normalizedIdentifier.includes('@')) {
+            setPending({
+              name: '',
+              email: normalizedIdentifier.toLowerCase(),
+              phone: '',
+              password,
+            });
+          }
+          throw error;
+        }
       },
       register: async (fields) => {
         const normalized = { ...fields, email: fields.email.trim().toLowerCase() };
@@ -183,6 +200,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!token) return;
         const current = await usersApi.me(token);
         await persistSession(token, current);
+      },
+      deleteAccount: async (password) => {
+        if (!token) throw new Error('Log in again before deleting your account.');
+        await usersApi.deleteMe(token, password);
+        setPending(null);
+        await clearSession();
       },
       logout: clearSession,
       completeOnboarding: async () => {

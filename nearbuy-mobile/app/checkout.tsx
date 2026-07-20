@@ -1,8 +1,8 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
-import { Check, ShieldCheck, X } from 'lucide-react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { Check, CreditCard, ShieldCheck, Smartphone, X } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,21 +13,42 @@ import { useAuth } from '@/lib/AuthContext';
 import { useColors } from '@/lib/ThemeContext';
 import {
   type ApiListing,
-  type ApiPaymentMethod,
+  ApiError,
+  type CheckoutPaymentChannel,
   formatGhs,
   listingsApi,
-  paymentMethodsApi,
   paymentsApi,
 } from '@/lib/api';
 import { FONTS, MODES, SHADOWS, type Mode } from '@/lib/theme';
 
-// Icon/text on a mode tint (escrow banner) stays dark — the tint is light in both schemes.
+// Icon/text on this light protection banner stays dark in both schemes.
 const ON_TINT = '#111317';
 
 type Step = 'review' | 'processing' | 'success';
 
 const fmt = (n: number) =>
   'GHS ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const wait = (milliseconds: number, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      const error = new Error('Payment cancelled');
+      error.name = 'AbortError';
+      reject(error);
+      return;
+    }
+    const timer = setTimeout(resolve, milliseconds);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        const error = new Error('Payment cancelled');
+        error.name = 'AbortError';
+        reject(error);
+      },
+      { once: true }
+    );
+  });
 
 export default function Checkout() {
   const router = useRouter();
@@ -44,12 +65,15 @@ export default function Checkout() {
   const theme = MODES[mode];
 
   const [step, setStep] = useState<Step>('review');
+  const [paymentChannel, setPaymentChannel] = useState<CheckoutPaymentChannel>('MOBILE_MONEY');
   const [orderRef, setOrderRef] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<ApiPaymentMethod | null>(null);
+  const [processingMessage, setProcessingMessage] = useState('Connecting securely to Paystack.');
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: number;
     reference: string;
   } | null>(null);
+  const requestAbort = useRef<AbortController | null>(null);
+  const paymentAttempt = useRef(0);
 
   useEffect(() => {
     if (listing || !token || !Number.isFinite(listingId)) return;
@@ -61,18 +85,6 @@ export default function Checkout() {
       );
   }, [listing, listingId, showToast, token]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!token) return;
-      void paymentMethodsApi
-        .all(token)
-        .then((methods) =>
-          setPaymentMethod(methods.find((method) => method.defaultMethod) ?? methods[0] ?? null)
-        )
-        .catch(() => setPaymentMethod(null));
-    }, [token])
-  );
-
   const amt = Number(listing?.price ?? 0);
   const fee = Math.max(2, Math.round(amt * 0.015 * 100) / 100);
   const total = amt + fee;
@@ -80,42 +92,104 @@ export default function Checkout() {
 
   const close = () => router.back();
 
+  const abandonPaymentAttempt = (notify = true) => {
+    paymentAttempt.current += 1;
+    requestAbort.current?.abort();
+    requestAbort.current = null;
+    try {
+      WebBrowser.dismissAuthSession();
+    } catch {
+      /* No browser is open. */
+    }
+    setPendingPayment(null);
+    setStep('review');
+    if (notify) showToast('Payment attempt cancelled · choose another method');
+  };
+
+  const verifyWithRetry = async (orderId: number, reference: string, signal: AbortSignal) => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        return await paymentsApi.verifyOrderPayment(token!, orderId, reference, signal);
+      } catch (error) {
+        const stillProcessing = error instanceof ApiError && error.status === 409;
+        if (!stillProcessing || attempt === 7) throw error;
+        setProcessingMessage('Waiting for Mobile Money or Paystack confirmation…');
+        await wait(2500, signal);
+      }
+    }
+    throw new Error('Payment is not confirmed yet');
+  };
+
   const pay = async () => {
     if (!token || !listing) return showToast('Listing is still loading');
+    const attempt = ++paymentAttempt.current;
+    const controller = new AbortController();
+    requestAbort.current?.abort();
+    requestAbort.current = controller;
+    setProcessingMessage(
+      pendingPayment
+        ? 'Checking your existing payment…'
+        : paymentChannel === 'MOBILE_MONEY'
+          ? 'Starting Mobile Money checkout…'
+          : 'Starting secure card checkout…'
+    );
     setStep('processing');
     try {
       let paid;
       if (pendingPayment) {
-        paid = await paymentsApi.verifyOrderPayment(
-          token,
+        paid = await verifyWithRetry(
           pendingPayment.orderId,
-          pendingPayment.reference
+          pendingPayment.reference,
+          controller.signal
         );
       } else {
-        const created = await paymentsApi.createOrder(token, listing.id);
-        const initialized = await paymentsApi.initializeOrderPayment(token, created.id);
+        const created = await paymentsApi.createOrder(token, listing.id, controller.signal);
+        const initialized = await paymentsApi.initializeOrderPayment(
+          token,
+          created.id,
+          paymentChannel,
+          controller.signal
+        );
         if (initialized.provider === 'SANDBOX') {
-          paid = await paymentsApi.payOrder(token, created.id);
+          paid = await paymentsApi.payOrder(token, created.id, controller.signal);
         } else {
           if (!initialized.authorizationUrl || !initialized.reference)
             throw new Error('Paystack checkout is unavailable');
           setPendingPayment({ orderId: created.id, reference: initialized.reference });
-          await WebBrowser.openBrowserAsync(initialized.authorizationUrl);
-          paid = await paymentsApi.verifyOrderPayment(token, created.id, initialized.reference);
+          setProcessingMessage('Complete the payment in the secure Paystack window.');
+          const browserResult = await WebBrowser.openAuthSessionAsync(
+            initialized.authorizationUrl,
+            'nearbuy://payment-complete'
+          );
+          if (attempt !== paymentAttempt.current) return;
+          if (browserResult.type !== 'success') {
+            setProcessingMessage('Checking whether Paystack completed your payment…');
+          } else {
+            setProcessingMessage('Confirming your payment with Paystack…');
+          }
+          paid = await verifyWithRetry(created.id, initialized.reference, controller.signal);
         }
       }
+      if (attempt !== paymentAttempt.current) return;
       setPendingPayment(null);
       setOrderRef(`NB-${paid.id}`);
       setStep('success');
     } catch (error) {
+      if (
+        attempt !== paymentAttempt.current ||
+        (error instanceof Error && error.name === 'AbortError')
+      )
+        return;
       setStep('review');
       showToast(error instanceof Error ? error.message : 'Payment could not be secured');
+    } finally {
+      if (attempt === paymentAttempt.current) requestAbort.current = null;
     }
   };
 
   const done = () => {
     router.back();
-    showToast('Order placed · escrow held');
+    showToast('Order placed · payment confirmed');
   };
 
   const messageSeller = () => {
@@ -264,49 +338,51 @@ export default function Checkout() {
                 }}>
                 PAYMENT METHOD
               </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  backgroundColor: c.surface,
-                  borderRadius: 16,
-                  padding: 14,
-                  ...SHADOWS.row,
-                }}>
-                <View
-                  style={{
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 38,
-                    height: 38,
-                    borderRadius: 11,
-                    backgroundColor: '#FFCC00',
-                  }}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 9, color: '#1A1A1A' }}>
-                    {paymentMethod?.provider ?? 'MoMo'}
-                  </Text>
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>
-                    {paymentMethod
-                      ? `${paymentMethod.provider} Mobile Money`
-                      : 'Choose a payment method'}
-                  </Text>
-                  <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>
-                    {paymentMethod
-                      ? `•••• ${paymentMethod.lastFour}`
-                      : 'Paystack test checkout can also be used'}
-                  </Text>
-                </View>
-                <Pressable onPress={() => router.push('/payment-methods')}>
-                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: c.ink }}>
-                    Change
+              <View style={{ gap: 10 }}>
+                <PaymentOption
+                  title="Mobile Money"
+                  subtitle="Pay with MTN, Telecel or AT Money"
+                  recommended
+                  selected={paymentChannel === 'MOBILE_MONEY'}
+                  disabled={Boolean(pendingPayment)}
+                  onPress={() => setPaymentChannel('MOBILE_MONEY')}
+                  icon="mobile-money"
+                />
+                <PaymentOption
+                  title="Debit or credit card"
+                  subtitle="Visa or Mastercard via Paystack"
+                  selected={paymentChannel === 'CARD'}
+                  disabled={Boolean(pendingPayment)}
+                  onPress={() => setPaymentChannel('CARD')}
+                  icon="card"
+                />
+              </View>
+              {pendingPayment ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => abandonPaymentAttempt()}
+                  style={({ pressed }) => ({
+                    alignSelf: 'flex-start',
+                    marginTop: 12,
+                    opacity: pressed ? 0.6 : 1,
+                  })}>
+                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 12, color: c.danger }}>
+                    Cancel this attempt and choose another method
                   </Text>
                 </Pressable>
-              </View>
+              ) : null}
+              <Text
+                style={{
+                  fontFamily: FONTS.medium,
+                  fontSize: 11,
+                  color: c.muted,
+                  lineHeight: 16,
+                  marginTop: 8,
+                }}>
+                Your payment details are entered securely on Paystack and are not stored by Nearbuy.
+              </Text>
 
-              {/* escrow banner */}
+              {/* payment protection banner */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -329,8 +405,8 @@ export default function Checkout() {
                     color: ON_TINT,
                     lineHeight: 17,
                   }}>
-                  Held in escrow until you confirm. Released to the seller only when you’re
-                  satisfied.
+                  Nearbuy records the payment until you confirm receipt, then starts the seller’s
+                  verified Mobile Money payout.
                 </Text>
               </View>
             </ScrollView>
@@ -384,8 +460,24 @@ export default function Checkout() {
                 marginTop: 6,
                 textAlign: 'center',
               }}>
-              Holding funds in escrow with MTN MoMo.
+              {processingMessage}
             </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => abandonPaymentAttempt()}
+              style={({ pressed }) => ({
+                marginTop: 24,
+                borderWidth: 1.5,
+                borderColor: c.border,
+                borderRadius: 13,
+                paddingVertical: 11,
+                paddingHorizontal: 22,
+                opacity: pressed ? 0.65 : 1,
+              })}>
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13, color: c.ink }}>
+                Cancel payment
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -427,7 +519,7 @@ export default function Checkout() {
                   textAlign: 'center',
                   lineHeight: 19,
                 }}>
-                Your funds are held safely in escrow and released to the seller once you confirm.
+                Your payment is confirmed. The seller’s payout starts after you confirm receipt.
               </Text>
               <View
                 style={{
@@ -515,5 +607,92 @@ function Row({ k, v }: { k: string; v: string }) {
       <Text style={{ fontFamily: FONTS.semibold, fontSize: 12.5, color: c.secondary }}>{k}</Text>
       <Text style={{ fontFamily: FONTS.bold, fontSize: 12.5, color: c.ink }}>{v}</Text>
     </View>
+  );
+}
+
+function PaymentOption({
+  title,
+  subtitle,
+  selected,
+  disabled,
+  recommended,
+  onPress,
+  icon,
+}: {
+  title: string;
+  subtitle: string;
+  selected: boolean;
+  disabled: boolean;
+  recommended?: boolean;
+  onPress: () => void;
+  icon: 'mobile-money' | 'card';
+}) {
+  const c = useColors();
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        backgroundColor: c.surface,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: selected ? c.ink : c.border,
+        padding: 14,
+        opacity: disabled ? 0.65 : pressed ? 0.82 : 1,
+        ...SHADOWS.row,
+      })}>
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 38,
+          height: 38,
+          borderRadius: 11,
+          backgroundColor: selected ? c.ink : c.track,
+        }}>
+        {icon === 'mobile-money' ? (
+          <Smartphone size={18} color={selected ? c.surface : c.ink} strokeWidth={2.2} />
+        ) : (
+          <CreditCard size={18} color={selected ? c.surface : c.ink} strokeWidth={2.2} />
+        )}
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>{title}</Text>
+          {recommended ? (
+            <View
+              style={{
+                backgroundColor: MODES.shop.tagBg,
+                borderRadius: 7,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+              }}>
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 8.5, color: ON_TINT }}>
+                RECOMMENDED
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>{subtitle}</Text>
+      </View>
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 21,
+          height: 21,
+          borderRadius: 11,
+          borderWidth: 1.5,
+          borderColor: selected ? c.ink : c.border,
+          backgroundColor: selected ? c.ink : c.surface,
+        }}>
+        {selected && <Check size={13} color={c.surface} strokeWidth={3} />}
+      </View>
+    </Pressable>
   );
 }

@@ -59,7 +59,7 @@ export function ListingCard({ listing }: { listing: ApiListing }) {
               borderRadius: 7,
               overflow: 'hidden',
             }}>
-            {listing.type.toLowerCase()} Â· {listing.title}
+            {listing.type.toLowerCase()} · {listing.title}
           </Text>
         )}
 

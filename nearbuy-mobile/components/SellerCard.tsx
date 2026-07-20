@@ -19,7 +19,7 @@ export function SellerCard({ seller, theme, onMessage }: SellerCardProps) {
     <View
       style={{ flexDirection: 'row', alignItems: 'center',  gap: 13, backgroundColor: c.surface, borderRadius: 18, padding: 14, ...SHADOWS.card }}>
       <View
-        style={{ alignItems: 'center', justifyContent: 'center', 
+        style={{ alignItems: 'center', justifyContent: 'center',
           width: 46,
           height: 46,
           borderRadius: 14,
@@ -35,7 +35,7 @@ export function SellerCard({ seller, theme, onMessage }: SellerCardProps) {
           {seller.name}
         </Text>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', 
+          style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
             gap: 4,
             marginTop: 3,
             backgroundColor: theme.tagBg,

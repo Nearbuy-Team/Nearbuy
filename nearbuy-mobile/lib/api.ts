@@ -135,7 +135,21 @@ export interface ApiMessage {
   createdAt: string;
 }
 
-export type OrderStatus = 'PENDING' | 'PAID' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'REFUND_PENDING'
+  | 'REFUNDED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+export type PayoutStatus = 'NOT_STARTED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
+export type RefundStatus =
+  | 'NOT_REQUESTED'
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'NEEDS_ATTENTION'
+  | 'PROCESSED'
+  | 'FAILED';
 
 export interface ApiOrder {
   id: number;
@@ -149,9 +163,12 @@ export interface ApiOrder {
   createdAt: string;
   paymentProvider: string | null;
   paymentReference: string | null;
+  paymentChannel: CheckoutPaymentChannel | null;
+  payoutStatus: PayoutStatus;
+  refundStatus: RefundStatus;
 }
 
-export type TransactionType = 'CREDIT' | 'DEBIT' | 'ESCROW_HOLD' | 'ESCROW_RELEASE';
+export type TransactionType = 'CREDIT' | 'DEBIT' | 'ESCROW_HOLD' | 'ESCROW_RELEASE' | 'REFUND';
 
 export interface ApiWalletTransaction {
   id: number;
@@ -180,8 +197,11 @@ export interface ApiPaymentMethod {
   provider: string;
   lastFour: string;
   defaultMethod: boolean;
+  payoutReady: boolean;
   createdAt: string;
 }
+
+export type CheckoutPaymentChannel = 'MOBILE_MONEY' | 'CARD';
 
 export interface ApiReview {
   id: number;
@@ -214,6 +234,8 @@ export const authApi = {
 
 export const usersApi = {
   me: (token: string) => apiRequest<ApiUser>('/api/users/me', { token }),
+  deleteMe: (token: string, password: string) =>
+    apiRequest<void>('/api/users/me', { method: 'DELETE', token, body: { password } }),
   publicProfile: (token: string, userId: number) =>
     apiRequest<PublicUser>(`/api/users/${userId}`, { token }),
 };
@@ -265,28 +287,42 @@ export const chatsApi = {
 };
 
 export const paymentsApi = {
-  createOrder: (token: string, listingId: number) =>
-    apiRequest<ApiOrder>('/api/orders', { method: 'POST', token, body: { listingId } }),
-  payOrder: (token: string, orderId: number) =>
-    apiRequest<ApiOrder>(`/api/orders/${orderId}/pay`, { method: 'POST', token }),
-  initializeOrderPayment: (token: string, orderId: number) =>
+  createOrder: (token: string, listingId: number, signal?: AbortSignal) =>
+    apiRequest<ApiOrder>('/api/orders', { method: 'POST', token, body: { listingId }, signal }),
+  payOrder: (token: string, orderId: number, signal?: AbortSignal) =>
+    apiRequest<ApiOrder>(`/api/orders/${orderId}/pay`, { method: 'POST', token, signal }),
+  initializeOrderPayment: (
+    token: string,
+    orderId: number,
+    channel: CheckoutPaymentChannel,
+    signal?: AbortSignal
+  ) =>
     apiRequest<{
       provider: 'SANDBOX' | 'PAYSTACK';
       authorizationUrl: string | null;
       reference: string | null;
-    }>(`/api/orders/${orderId}/payment/initialize`, { method: 'POST', token }),
-  verifyOrderPayment: (token: string, orderId: number, reference: string) =>
+      channel: CheckoutPaymentChannel;
+    }>(`/api/orders/${orderId}/payment/initialize`, {
+      method: 'POST',
+      token,
+      body: { channel },
+      signal,
+    }),
+  verifyOrderPayment: (token: string, orderId: number, reference: string, signal?: AbortSignal) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/payment/verify`, {
       method: 'POST',
       token,
       body: { reference },
+      signal,
     }),
   completeOrder: (token: string, orderId: number) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/complete`, { method: 'POST', token }),
+  refundOrder: (token: string, orderId: number) =>
+    apiRequest<ApiOrder>(`/api/orders/${orderId}/refund`, { method: 'POST', token }),
   orders: (token: string) => apiRequest<ApiOrder[]>('/api/orders/mine', { token }),
   sales: (token: string) => apiRequest<ApiOrder[]>('/api/orders/sales', { token }),
   walletBalance: (token: string) =>
-    apiRequest<{ balance: number }>('/api/wallet/balance', { token }),
+    apiRequest<{ balance: number; sandboxMode: boolean }>('/api/wallet/balance', { token }),
   walletTransactions: (token: string) =>
     apiRequest<ApiWalletTransaction[]>('/api/wallet/transactions', { token }),
   topUp: (token: string, amount: number) =>

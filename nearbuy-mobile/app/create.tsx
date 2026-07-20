@@ -16,6 +16,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MODE_TO_LISTING_TYPE, useListings } from '@/components/ListingsContext';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useToast } from '@/components/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
@@ -236,208 +237,213 @@ export default function CreateListing() {
         </Text>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 120 }}>
-        {/* type selector */}
-        <FieldLabel style={{ marginBottom: 9 }}>WHAT ARE YOU POSTING?</FieldLabel>
-        <TypeSelector value={createType} onChange={setCreateType} />
-        <Text style={{ fontFamily: FONTS.semibold, fontSize: 12, color: c.muted, marginTop: 8 }}>
-          {meta.label}
-        </Text>
+      <KeyboardSafeView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 120 }}>
+          {/* type selector */}
+          <FieldLabel style={{ marginBottom: 9 }}>WHAT ARE YOU POSTING?</FieldLabel>
+          <TypeSelector value={createType} onChange={setCreateType} />
+          <Text style={{ fontFamily: FONTS.semibold, fontSize: 12, color: c.muted, marginTop: 8 }}>
+            {meta.label}
+          </Text>
 
-        {/* photos */}
-        <FieldLabel style={{ marginTop: 20, marginBottom: 9 }}>PHOTOS</FieldLabel>
-        <Pressable
-          onPress={() => void pickPhotos()}
-          style={{
-            alignItems: 'center',
-            borderWidth: 2,
-            borderStyle: 'dashed',
-            borderColor: c.border,
-            backgroundColor: c.chip,
-            borderRadius: 18,
-            paddingVertical: 26,
-            gap: 8,
-          }}>
-          <View
+          {/* photos */}
+          <FieldLabel style={{ marginTop: 20, marginBottom: 9 }}>PHOTOS</FieldLabel>
+          <Pressable
+            onPress={() => void pickPhotos()}
             style={{
               alignItems: 'center',
-              justifyContent: 'center',
-              width: 44,
-              height: 44,
-              borderRadius: 14,
-              backgroundColor: theme.tagBg,
-              borderWidth: 1,
-              borderColor: theme.tagBorder,
+              borderWidth: 2,
+              borderStyle: 'dashed',
+              borderColor: c.border,
+              backgroundColor: c.chip,
+              borderRadius: 18,
+              paddingVertical: 26,
+              gap: 8,
             }}>
-            <ImagePlus size={22} color={ON_TINT} strokeWidth={2.1} />
-          </View>
-          <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: c.secondary }}>
-            Add photos
-          </Text>
-          <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: c.muted }}>
-            Up to 8 · first is the cover
-          </Text>
-        </Pressable>
-        {photos.length > 0 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 10, paddingTop: 10 }}>
-            {photos.map((photo, index) => (
-              <View key={photo.uri} style={{ position: 'relative' }}>
-                <Image
-                  source={{ uri: photo.uri }}
-                  style={{ width: 76, height: 76, borderRadius: 13, backgroundColor: c.imgBg }}
-                />
-                <Pressable
-                  onPress={() =>
-                    setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))
-                  }
-                  style={{
-                    position: 'absolute',
-                    top: -5,
-                    right: -5,
-                    width: 22,
-                    height: 22,
-                    borderRadius: 11,
-                    backgroundColor: c.ink,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <X size={12} color={c.surface} strokeWidth={3} />
-                </Pressable>
-              </View>
-            ))}
-          </ScrollView>
-        ) : null}
-
-        {/* title */}
-        <FieldLabel style={{ marginTop: 20, marginBottom: 9 }}>TITLE</FieldLabel>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder={meta.titlePh}
-          placeholderTextColor={c.muted}
-          style={[INPUT_STYLE, { paddingVertical: 14 }]}
-        />
-
-        {/* price */}
-        <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>PRICE (GHS)</FieldLabel>
-        <View style={[{ flexDirection: 'row', alignItems: 'center' }, INPUT_STYLE, { gap: 10 }]}>
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 14, color: c.muted }}>GHS</Text>
-          <TextInput
-            value={price}
-            onChangeText={setPrice}
-            placeholder={meta.pricePh}
-            placeholderTextColor={c.muted}
-            keyboardType="numbers-and-punctuation"
-            style={{
-              flex: 1,
-              minWidth: 0,
-              paddingVertical: 14,
-              fontFamily: FONTS.semibold,
-              fontSize: 14,
-              color: c.ink,
-            }}
-          />
-        </View>
-
-        {/* details */}
-        <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>DETAILS</FieldLabel>
-        <View style={{ gap: 8 }}>
-          <Pressable
-            onPress={() => router.push('/category')}
-            style={[
-              { flexDirection: 'row', alignItems: 'center' },
-              INPUT_STYLE,
-              { gap: 12, paddingVertical: 14 },
-            ]}>
-            <TagIcon size={16} color={c.secondary} strokeWidth={2.2} />
-            <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: c.ink }}>
-              Category
-            </Text>
-            <Text
+            <View
               style={{
-                fontFamily: FONTS.semibold,
-                fontSize: 12.5,
-                color: draftCategory ? '#4A4D54' : c.muted,
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                backgroundColor: theme.tagBg,
+                borderWidth: 1,
+                borderColor: theme.tagBorder,
               }}>
-              {draftCategory || 'Choose'}
+              <ImagePlus size={22} color={ON_TINT} strokeWidth={2.1} />
+            </View>
+            <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: c.secondary }}>
+              Add photos
             </Text>
-            <ChevronRight size={16} color={c.muted} strokeWidth={2.4} />
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 11, color: c.muted }}>
+              Up to 8 · first is the cover
+            </Text>
           </Pressable>
-          <View
-            style={[
-              { flexDirection: 'row', alignItems: 'center' },
-              INPUT_STYLE,
-              { gap: 12, paddingVertical: 14 },
-            ]}>
-            <MapPin size={16} color={c.secondary} strokeWidth={2.2} />
-            <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: c.ink }}>
-              Location
-            </Text>
-            <Text style={{ fontFamily: FONTS.semibold, fontSize: 12.5, color: c.secondary }}>
-              East Legon
-            </Text>
+          {photos.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 10, paddingTop: 10 }}>
+              {photos.map((photo, index) => (
+                <View key={photo.uri} style={{ position: 'relative' }}>
+                  <Image
+                    source={{ uri: photo.uri }}
+                    style={{ width: 76, height: 76, borderRadius: 13, backgroundColor: c.imgBg }}
+                  />
+                  <Pressable
+                    onPress={() =>
+                      setPhotos((current) =>
+                        current.filter((_, photoIndex) => photoIndex !== index)
+                      )
+                    }
+                    style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -5,
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: c.ink,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    <X size={12} color={c.surface} strokeWidth={3} />
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
+
+          {/* title */}
+          <FieldLabel style={{ marginTop: 20, marginBottom: 9 }}>TITLE</FieldLabel>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder={meta.titlePh}
+            placeholderTextColor={c.muted}
+            style={[INPUT_STYLE, { paddingVertical: 14 }]}
+          />
+
+          {/* price */}
+          <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>PRICE (GHS)</FieldLabel>
+          <View style={[{ flexDirection: 'row', alignItems: 'center' }, INPUT_STYLE, { gap: 10 }]}>
+            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 14, color: c.muted }}>GHS</Text>
+            <TextInput
+              value={price}
+              onChangeText={setPrice}
+              placeholder={meta.pricePh}
+              placeholderTextColor={c.muted}
+              keyboardType="numbers-and-punctuation"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                paddingVertical: 14,
+                fontFamily: FONTS.semibold,
+                fontSize: 14,
+                color: c.ink,
+              }}
+            />
           </View>
+
+          {/* details */}
+          <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>DETAILS</FieldLabel>
+          <View style={{ gap: 8 }}>
+            <Pressable
+              onPress={() => router.push('/category')}
+              style={[
+                { flexDirection: 'row', alignItems: 'center' },
+                INPUT_STYLE,
+                { gap: 12, paddingVertical: 14 },
+              ]}>
+              <TagIcon size={16} color={c.secondary} strokeWidth={2.2} />
+              <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: c.ink }}>
+                Category
+              </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.semibold,
+                  fontSize: 12.5,
+                  color: draftCategory ? '#4A4D54' : c.muted,
+                }}>
+                {draftCategory || 'Choose'}
+              </Text>
+              <ChevronRight size={16} color={c.muted} strokeWidth={2.4} />
+            </Pressable>
+            <View
+              style={[
+                { flexDirection: 'row', alignItems: 'center' },
+                INPUT_STYLE,
+                { gap: 12, paddingVertical: 14 },
+              ]}>
+              <MapPin size={16} color={c.secondary} strokeWidth={2.2} />
+              <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: c.ink }}>
+                Location
+              </Text>
+              <Text style={{ fontFamily: FONTS.semibold, fontSize: 12.5, color: c.secondary }}>
+                East Legon
+              </Text>
+            </View>
+          </View>
+
+          {/* description */}
+          <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>DESCRIPTION</FieldLabel>
+          <TextInput
+            value={desc}
+            onChangeText={setDesc}
+            placeholder="Condition, details, what's included…"
+            placeholderTextColor={c.muted}
+            multiline
+            style={[
+              INPUT_STYLE,
+              {
+                minHeight: 92,
+                paddingVertical: 14,
+                textAlignVertical: 'top',
+                fontFamily: FONTS.medium,
+              },
+            ]}
+          />
+        </ScrollView>
+
+        {/* sticky footer */}
+        <View
+          style={{
+            backgroundColor: c.surface,
+            paddingHorizontal: 20,
+            paddingTop: 14,
+            paddingBottom: 28,
+            borderTopWidth: 1,
+            borderTopColor: c.hairline,
+          }}>
+          <Pressable
+            onPress={onPost}
+            disabled={posting}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              backgroundColor: theme.accent,
+              paddingVertical: 15,
+              borderRadius: 15,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}>
+            {posting ? (
+              <ActivityIndicator color={theme.accentText} />
+            ) : (
+              <Check size={17} color={theme.accentText} strokeWidth={2.6} />
+            )}
+            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
+              {posting ? 'Posting…' : 'Post listing'}
+            </Text>
+          </Pressable>
         </View>
-
-        {/* description */}
-        <FieldLabel style={{ marginTop: 18, marginBottom: 9 }}>DESCRIPTION</FieldLabel>
-        <TextInput
-          value={desc}
-          onChangeText={setDesc}
-          placeholder="Condition, details, what's included…"
-          placeholderTextColor={c.muted}
-          multiline
-          style={[
-            INPUT_STYLE,
-            {
-              minHeight: 92,
-              paddingVertical: 14,
-              textAlignVertical: 'top',
-              fontFamily: FONTS.medium,
-            },
-          ]}
-        />
-      </ScrollView>
-
-      {/* sticky footer */}
-      <View
-        style={{
-          backgroundColor: c.surface,
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 28,
-          borderTopWidth: 1,
-          borderTopColor: c.hairline,
-        }}>
-        <Pressable
-          onPress={onPost}
-          disabled={posting}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            backgroundColor: theme.accent,
-            paddingVertical: 15,
-            borderRadius: 15,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}>
-          {posting ? (
-            <ActivityIndicator color={theme.accentText} />
-          ) : (
-            <Check size={17} color={theme.accentText} strokeWidth={2.6} />
-          )}
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
-            {posting ? 'Posting…' : 'Post listing'}
-          </Text>
-        </Pressable>
-      </View>
+      </KeyboardSafeView>
     </SafeAreaView>
   );
 }

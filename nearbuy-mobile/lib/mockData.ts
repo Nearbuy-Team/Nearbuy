@@ -227,7 +227,7 @@ export interface AppNotification {
 }
 
 export const NOTIFICATIONS: AppNotification[] = [
-  { title: 'Payment secured', sub: 'Your escrow for "AC Repair Technician" is held.', time: '2m', unread: true },
+  { title: 'Payment secured', sub: 'Your payment for "AC Repair Technician" is confirmed.', time: '2m', unread: true },
   { title: 'New message from Kwame A.', sub: 'On my way — should be there by 2pm 🚗', time: '15m', unread: true },
   { title: 'Listing approved', sub: '"iPhone 13 Pro" is now live.', time: '1h', unread: false },
   { title: 'Price drop nearby', sub: 'Nike Air Force 1 dropped to GHS 520.', time: '3h', unread: false },
