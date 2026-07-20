@@ -163,11 +163,10 @@ export default function Checkout() {
           );
           if (attempt !== paymentAttempt.current) return;
           if (browserResult.type !== 'success') {
-            setStep('review');
-            showToast('Payment window closed · resume or choose another method');
-            return;
+            setProcessingMessage('Checking whether Paystack completed your payment…');
+          } else {
+            setProcessingMessage('Confirming your payment with Paystack…');
           }
-          setProcessingMessage('Confirming your payment with Paystack…');
           paid = await verifyWithRetry(created.id, initialized.reference, controller.signal);
         }
       }
