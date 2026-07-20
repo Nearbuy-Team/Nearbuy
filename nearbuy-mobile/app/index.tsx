@@ -1,10 +1,10 @@
 import { Redirect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Home } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { BrandMark } from '@/components/BrandMark';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
 import { FONTS, MODES } from '@/lib/theme';
@@ -35,25 +35,27 @@ export default function Splash() {
   }
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',  backgroundColor: c.canvas }}>
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: c.canvas,
+      }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <View style={{ alignItems: 'center',  gap: 18 }}>
-        <View
-          style={{ alignItems: 'center', justifyContent: 'center',
-            width: 80,
-            height: 80,
-            borderRadius: 27,
-            backgroundColor: MODES.shop.accent,
+      <View style={{ alignItems: 'center', gap: 18 }}>
+        <BrandMark
+          size={88}
+          style={{
             shadowColor: MODES.shop.accent,
             shadowOffset: { width: 0, height: 22 },
-            shadowOpacity: 0.55,
+            shadowOpacity: 0.4,
             shadowRadius: 30,
-            elevation: 10,
-          }}>
-          <Home size={42} color={MODES.shop.accentText} strokeWidth={2.3} />
-        </View>
-        <View style={{ alignItems: 'center',  gap: 7 }}>
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 31, letterSpacing: -1, color: c.ink }}>
+          }}
+        />
+        <View style={{ alignItems: 'center', gap: 7 }}>
+          <Text
+            style={{ fontFamily: FONTS.extrabold, fontSize: 31, letterSpacing: -1, color: c.ink }}>
             Nearbuy
           </Text>
           <Text style={{ fontFamily: FONTS.semibold, fontSize: 13, color: c.secondary }}>
@@ -75,7 +77,13 @@ export default function Splash() {
         }}>
         <Animated.View
           style={[
-            { height: '100%', width: '100%', borderRadius: 3, backgroundColor: c.ink, transformOrigin: 'left' },
+            {
+              height: '100%',
+              width: '100%',
+              borderRadius: 3,
+              backgroundColor: c.ink,
+              transformOrigin: 'left',
+            },
             barStyle,
           ]}
         />

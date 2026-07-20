@@ -1,6 +1,8 @@
 import { Check } from 'lucide-react-native';
-import { Text, View } from 'react-native';
+import { Keyboard, Platform, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useMode } from '@/components/ModeContext';
 import { useTheme } from '@/lib/ThemeContext';
@@ -13,6 +15,21 @@ import { FONTS, SHADOWS } from '@/lib/theme';
 export function Toast({ message }: { message: string }) {
   const { theme } = useMode();
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   return (
     <Animated.View
@@ -22,7 +39,7 @@ export function Toast({ message }: { message: string }) {
         position: 'absolute',
         left: 20,
         right: 20,
-        bottom: 98,
+        bottom: keyboardHeight > 0 ? keyboardHeight + 14 : Math.max(98, insets.bottom + 74),
         flexDirection: 'row',
         alignItems: 'center',
         gap: 11,

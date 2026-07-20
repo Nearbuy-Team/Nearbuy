@@ -234,6 +234,8 @@ export const authApi = {
 
 export const usersApi = {
   me: (token: string) => apiRequest<ApiUser>('/api/users/me', { token }),
+  deleteMe: (token: string, password: string) =>
+    apiRequest<void>('/api/users/me', { method: 'DELETE', token, body: { password } }),
   publicProfile: (token: string, userId: number) =>
     apiRequest<PublicUser>(`/api/users/${userId}`, { token }),
 };
@@ -285,11 +287,16 @@ export const chatsApi = {
 };
 
 export const paymentsApi = {
-  createOrder: (token: string, listingId: number) =>
-    apiRequest<ApiOrder>('/api/orders', { method: 'POST', token, body: { listingId } }),
-  payOrder: (token: string, orderId: number) =>
-    apiRequest<ApiOrder>(`/api/orders/${orderId}/pay`, { method: 'POST', token }),
-  initializeOrderPayment: (token: string, orderId: number, channel: CheckoutPaymentChannel) =>
+  createOrder: (token: string, listingId: number, signal?: AbortSignal) =>
+    apiRequest<ApiOrder>('/api/orders', { method: 'POST', token, body: { listingId }, signal }),
+  payOrder: (token: string, orderId: number, signal?: AbortSignal) =>
+    apiRequest<ApiOrder>(`/api/orders/${orderId}/pay`, { method: 'POST', token, signal }),
+  initializeOrderPayment: (
+    token: string,
+    orderId: number,
+    channel: CheckoutPaymentChannel,
+    signal?: AbortSignal
+  ) =>
     apiRequest<{
       provider: 'SANDBOX' | 'PAYSTACK';
       authorizationUrl: string | null;
@@ -299,12 +306,14 @@ export const paymentsApi = {
       method: 'POST',
       token,
       body: { channel },
+      signal,
     }),
-  verifyOrderPayment: (token: string, orderId: number, reference: string) =>
+  verifyOrderPayment: (token: string, orderId: number, reference: string, signal?: AbortSignal) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/payment/verify`, {
       method: 'POST',
       token,
       body: { reference },
+      signal,
     }),
   completeOrder: (token: string, orderId: number) =>
     apiRequest<ApiOrder>(`/api/orders/${orderId}/complete`, { method: 'POST', token }),

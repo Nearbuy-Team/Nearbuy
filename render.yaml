@@ -133,6 +133,8 @@ services:
           envVarKey: RENDER_EXTERNAL_HOSTNAME
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      - key: PAYSTACK_CALLBACK_URL
+        value: https://nearbuy-api-7c197b38.onrender.com/api/payments/paystack/callback
       - key: PAYSTACK_TRANSFERS_ENABLED
         value: "false"
       - key: PAYMENTS_SANDBOX_ENABLED

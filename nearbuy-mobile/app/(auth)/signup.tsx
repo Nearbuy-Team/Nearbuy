@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthInput } from '@/components/AuthInput';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useToast } from '@/components/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
@@ -66,100 +67,108 @@ export default function Signup() {
         </Pressable>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 10, paddingBottom: 40 }}>
-        <Text
-          style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
-          Create account
-        </Text>
-        <Text
-          style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 7 }}>
-          Join Nearbuy to shop, book and rent near you.
-        </Text>
-
-        <View style={{ marginTop: 24, gap: 16 }}>
-          <AuthInput
-            label="FULL NAME"
-            value={name}
-            onChangeText={setName}
-            error={err.name}
-            placeholder="e.g. Ama Boateng"
-            autoCapitalize="words"
-          />
-          <AuthInput
-            label="EMAIL"
-            value={email}
-            onChangeText={setEmail}
-            error={err.email}
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <AuthInput
-            label="PHONE"
-            value={phone}
-            onChangeText={setPhone}
-            error={err.phone}
-            placeholder="+233 24 000 0000"
-            keyboardType="phone-pad"
-          />
-          <AuthInput
-            label="PASSWORD"
-            value={password}
-            onChangeText={setPassword}
-            error={err.password}
-            placeholder="At least 10 characters"
-            secureTextEntry
-          />
-        </View>
-
-        <Pressable
-          onPress={onSubmit}
-          disabled={submitting}
-          style={({ pressed }) => ({
-            marginTop: 26,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: theme.accent,
-            paddingVertical: 15,
-            borderRadius: 15,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}>
-          {submitting ? (
-            <ActivityIndicator color={theme.accentText} />
-          ) : (
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
-              Create account
-            </Text>
-          )}
-        </Pressable>
-
-        <Text
-          style={{
-            fontFamily: FONTS.medium,
-            fontSize: 11,
-            color: c.muted,
-            textAlign: 'center',
-            marginTop: 14,
-            lineHeight: 16,
-          }}>
-          By continuing you agree to Nearbuy’s Terms & Privacy Policy.
-        </Text>
-
-        <Pressable onPress={() => router.replace('/(auth)/login')} style={{ paddingTop: 16 }}>
+      <KeyboardSafeView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 10, paddingBottom: 40 }}>
           <Text
             style={{
-              fontFamily: FONTS.bold,
-              fontSize: 13,
-              color: c.secondary,
-              textAlign: 'center',
+              fontFamily: FONTS.extrabold,
+              fontSize: 26,
+              letterSpacing: -0.8,
+              color: c.ink,
             }}>
-            Already have an account? <Text style={{ color: c.ink }}>Log in</Text>
+            Create account
           </Text>
-        </Pressable>
-      </ScrollView>
+          <Text
+            style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 7 }}>
+            Join Nearbuy to shop, book and rent near you.
+          </Text>
+
+          <View style={{ marginTop: 24, gap: 16 }}>
+            <AuthInput
+              label="FULL NAME"
+              value={name}
+              onChangeText={setName}
+              error={err.name}
+              placeholder="e.g. Ama Boateng"
+              autoCapitalize="words"
+            />
+            <AuthInput
+              label="EMAIL"
+              value={email}
+              onChangeText={setEmail}
+              error={err.email}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <AuthInput
+              label="PHONE"
+              value={phone}
+              onChangeText={setPhone}
+              error={err.phone}
+              placeholder="+233 24 000 0000"
+              keyboardType="phone-pad"
+            />
+            <AuthInput
+              label="PASSWORD"
+              value={password}
+              onChangeText={setPassword}
+              error={err.password}
+              placeholder="At least 10 characters"
+              secureTextEntry
+            />
+          </View>
+
+          <Pressable
+            onPress={onSubmit}
+            disabled={submitting}
+            style={({ pressed }) => ({
+              marginTop: 26,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.accent,
+              paddingVertical: 15,
+              borderRadius: 15,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}>
+            {submitting ? (
+              <ActivityIndicator color={theme.accentText} />
+            ) : (
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
+                Create account
+              </Text>
+            )}
+          </Pressable>
+
+          <Text
+            style={{
+              fontFamily: FONTS.medium,
+              fontSize: 11,
+              color: c.muted,
+              textAlign: 'center',
+              marginTop: 14,
+              lineHeight: 16,
+            }}>
+            By continuing you agree to Nearbuy’s Terms & Privacy Policy.
+          </Text>
+
+          <Pressable onPress={() => router.replace('/(auth)/login')} style={{ paddingTop: 16 }}>
+            <Text
+              style={{
+                fontFamily: FONTS.bold,
+                fontSize: 13,
+                color: c.secondary,
+                textAlign: 'center',
+              }}>
+              Already have an account? <Text style={{ color: c.ink }}>Log in</Text>
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardSafeView>
     </SafeAreaView>
   );
 }

@@ -2,10 +2,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Check, ChevronLeft, Lock } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OtpInput } from '@/components/OtpInput';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useToast } from '@/components/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
@@ -92,83 +93,95 @@ export default function Verify() {
         </Pressable>
       </View>
 
-      <View style={{ paddingHorizontal: 26, paddingTop: 18 }}>
-        <View
-          style={{
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 52,
-            height: 52,
-            borderRadius: 17,
-            backgroundColor: theme.tagBg,
-            marginBottom: 18,
-          }}>
-          <Lock size={24} color={ON_TINT} strokeWidth={2.1} />
-        </View>
+      <KeyboardSafeView>
+        <ScrollView
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 18, paddingBottom: 40 }}>
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 52,
+              height: 52,
+              borderRadius: 17,
+              backgroundColor: theme.tagBg,
+              marginBottom: 18,
+            }}>
+            <Lock size={24} color={ON_TINT} strokeWidth={2.1} />
+          </View>
 
-        <Text
-          style={{
-            fontFamily: FONTS.extrabold,
-            fontSize: 26,
-            letterSpacing: -0.8,
-            color: col.ink,
-          }}>
-          Verify your email
-        </Text>
-        <Text
-          style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: col.secondary, marginTop: 7 }}>
-          Enter the 6-digit code we sent to{' '}
-          <Text style={{ fontFamily: FONTS.bold, color: col.ink }}>
-            {pendingEmail || email || 'your email address'}
+          <Text
+            style={{
+              fontFamily: FONTS.extrabold,
+              fontSize: 26,
+              letterSpacing: -0.8,
+              color: col.ink,
+            }}>
+            Verify your email
           </Text>
-        </Text>
-
-        <View style={{ marginTop: 26 }}>
-          <OtpInput value={code} onChange={setCode} />
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20 }}>
-          <Text style={{ fontFamily: FONTS.medium, fontSize: 12.5, color: col.secondary }}>
-            Didn’t get the code?
-          </Text>
-          <Pressable onPress={onResend} disabled={cooldown > 0}>
-            <Text
-              style={{
-                fontFamily: FONTS.extrabold,
-                fontSize: 12.5,
-                color: cooldown > 0 ? col.muted : col.ink,
-              }}>
-              {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+          <Text
+            style={{
+              fontFamily: FONTS.medium,
+              fontSize: 13.5,
+              color: col.secondary,
+              marginTop: 7,
+            }}>
+            Enter the 6-digit code we sent to{' '}
+            <Text style={{ fontFamily: FONTS.bold, color: col.ink }}>
+              {pendingEmail || email || 'your email address'}
             </Text>
-          </Pressable>
-        </View>
+          </Text>
 
-        <Pressable
-          onPress={onVerify}
-          disabled={submitting}
-          style={({ pressed }) => ({
-            marginTop: 28,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            backgroundColor: theme.accent,
-            paddingVertical: 15,
-            borderRadius: 15,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}>
-          {submitting ? (
-            <ActivityIndicator color={theme.accentText} />
-          ) : (
-            <>
-              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
-                Verify & continue
+          <View style={{ marginTop: 26 }}>
+            <OtpInput value={code} onChange={setCode} />
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20 }}>
+            <Text style={{ fontFamily: FONTS.medium, fontSize: 12.5, color: col.secondary }}>
+              Didn’t get the code?
+            </Text>
+            <Pressable onPress={onResend} disabled={cooldown > 0}>
+              <Text
+                style={{
+                  fontFamily: FONTS.extrabold,
+                  fontSize: 12.5,
+                  color: cooldown > 0 ? col.muted : col.ink,
+                }}>
+                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
               </Text>
-              <Check size={16} color={theme.accentText} strokeWidth={2.8} />
-            </>
-          )}
-        </Pressable>
-      </View>
+            </Pressable>
+          </View>
+
+          <Pressable
+            onPress={onVerify}
+            disabled={submitting}
+            style={({ pressed }) => ({
+              marginTop: 28,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              backgroundColor: theme.accent,
+              paddingVertical: 15,
+              borderRadius: 15,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}>
+            {submitting ? (
+              <ActivityIndicator color={theme.accentText} />
+            ) : (
+              <>
+                <Text
+                  style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
+                  Verify & continue
+                </Text>
+                <Check size={16} color={theme.accentText} strokeWidth={2.8} />
+              </>
+            )}
+          </Pressable>
+        </ScrollView>
+      </KeyboardSafeView>
     </SafeAreaView>
   );
 }

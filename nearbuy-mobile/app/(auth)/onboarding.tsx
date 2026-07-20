@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowRight, Home } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BrandMark } from '@/components/BrandMark';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
 import { FONTS, MODES, type Mode } from '@/lib/theme';
@@ -73,13 +74,22 @@ export default function Onboarding() {
 
       {/* brand + skip */}
       <View
-        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',  paddingHorizontal: 22, paddingTop: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 8 }}>
-          <View
-            style={{ alignItems: 'center', justifyContent: 'center',  width: 23, height: 23, borderRadius: 8, backgroundColor: MODES.shop.accent }}>
-            <Home size={12} color={MODES.shop.accentText} strokeWidth={2.6} />
-          </View>
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 16, letterSpacing: -0.4, color: c.ink }}>
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 22,
+          paddingTop: 8,
+        }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <BrandMark size={27} />
+          <Text
+            style={{
+              fontFamily: FONTS.extrabold,
+              fontSize: 16,
+              letterSpacing: -0.4,
+              color: c.ink,
+            }}>
             Nearbuy
           </Text>
         </View>
@@ -89,11 +99,14 @@ export default function Onboarding() {
       </View>
 
       {/* hero image */}
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',  paddingHorizontal: 28 }}>
+      <View
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 }}>
         <Animated.View
           key={`img-${index}`}
           entering={FadeIn.duration(320)}
-          style={{ alignItems: 'center', justifyContent: 'center',
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
             width: '100%',
             aspectRatio: 1,
             maxHeight: 318,
@@ -120,7 +133,8 @@ export default function Onboarding() {
 
       {/* bottom sheet */}
       <View
-        style={{ backgroundColor: c.surface,
+        style={{
+          backgroundColor: c.surface,
           borderTopLeftRadius: 30,
           borderTopRightRadius: 30,
           paddingHorizontal: 26,
@@ -134,7 +148,10 @@ export default function Onboarding() {
         }}>
         <Animated.View key={`copy-${index}`} entering={FadeIn.duration(320)}>
           <View
-            style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              alignSelf: 'flex-start',
               gap: 6,
               backgroundColor: theme.tagBg,
               borderWidth: 1,
@@ -145,20 +162,47 @@ export default function Onboarding() {
               marginBottom: 14,
             }}>
             <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: theme.accent }} />
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 10.5, letterSpacing: 0.5, color: ON_TINT }}>
+            <Text
+              style={{
+                fontFamily: FONTS.extrabold,
+                fontSize: 10.5,
+                letterSpacing: 0.5,
+                color: ON_TINT,
+              }}>
               {slide.kicker}
             </Text>
           </View>
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 23, letterSpacing: -0.6, lineHeight: 28, color: c.ink }}>
+          <Text
+            style={{
+              fontFamily: FONTS.extrabold,
+              fontSize: 23,
+              letterSpacing: -0.6,
+              lineHeight: 28,
+              color: c.ink,
+            }}>
             {slide.title}
           </Text>
-          <Text style={{ fontFamily: FONTS.medium, fontSize: 13.5, color: c.secondary, marginTop: 9, lineHeight: 20 }}>
+          <Text
+            style={{
+              fontFamily: FONTS.medium,
+              fontSize: 13.5,
+              color: c.secondary,
+              marginTop: 9,
+              lineHeight: 20,
+            }}>
             {slide.sub}
           </Text>
         </Animated.View>
 
         {/* dots */}
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 7, marginTop: 22, marginBottom: 18 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 7,
+            marginTop: 22,
+            marginBottom: 18,
+          }}>
           {SLIDES.map((s, i) => (
             <View
               key={s.mode}
@@ -191,7 +235,13 @@ export default function Onboarding() {
         </Pressable>
 
         <Pressable onPress={() => exitTo('/(auth)/login')} style={{ paddingTop: 16 }}>
-          <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: c.secondary, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontFamily: FONTS.bold,
+              fontSize: 13,
+              color: c.secondary,
+              textAlign: 'center',
+            }}>
             I already have an account · <Text style={{ color: c.ink }}>Log in</Text>
           </Text>
         </Pressable>

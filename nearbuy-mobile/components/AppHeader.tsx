@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
-import { Bell, Home, MapPin, Plus } from 'lucide-react-native';
+import { Bell, MapPin, Plus } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { ModeSelector } from '@/components/ModeSelector';
 import { useMode } from '@/components/ModeContext';
+import { BrandMark } from '@/components/BrandMark';
 import { SearchBar } from '@/components/SearchBar';
 import { useColors } from '@/lib/ThemeContext';
 import { FONTS } from '@/lib/theme';
@@ -20,7 +21,8 @@ export function AppHeader({ query, onQueryChange }: AppHeaderProps) {
 
   return (
     <View
-      style={{ backgroundColor: c.surface,
+      style={{
+        backgroundColor: c.surface,
         paddingTop: 4,
         paddingHorizontal: 20,
         paddingBottom: 16,
@@ -29,19 +31,27 @@ export function AppHeader({ query, onQueryChange }: AppHeaderProps) {
         borderBottomColor: c.hairline,
       }}>
       {/* brand row */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',  marginBottom: 16 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}>
         <View style={{ gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 9 }}>
-            <View
-              style={{ alignItems: 'center', justifyContent: 'center',  width: 26, height: 26, borderRadius: 9, backgroundColor: theme.accent }}>
-              <Home size={14} color={theme.accentText} strokeWidth={2.4} />
-            </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+            <BrandMark size={28} />
             <Text
-              style={{ fontFamily: FONTS.extrabold, fontSize: 22, letterSpacing: -0.6, color: c.ink }}>
+              style={{
+                fontFamily: FONTS.extrabold,
+                fontSize: 22,
+                letterSpacing: -0.6,
+                color: c.ink,
+              }}>
               Nearbuy
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 5, paddingLeft: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 1 }}>
             <MapPin size={11} color={c.secondaryAlt} strokeWidth={2.4} />
             <Text style={{ fontFamily: FONTS.semibold, fontSize: 11.5, color: c.secondaryAlt }}>
               East Legon · 5 km radius
@@ -49,7 +59,7 @@ export function AppHeader({ query, onQueryChange }: AppHeaderProps) {
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 9 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
           {/* + Sell pill */}
           <Pressable
             onPress={() => router.push('/create')}
@@ -64,13 +74,22 @@ export function AppHeader({ query, onQueryChange }: AppHeaderProps) {
               transform: [{ scale: pressed ? 0.95 : 1 }],
             })}>
             <Plus size={14} color={theme.accentText} strokeWidth={3} />
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13, color: theme.accentText }}>Sell</Text>
+            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13, color: theme.accentText }}>
+              Sell
+            </Text>
           </Pressable>
 
           {/* bell button */}
           <Pressable
             onPress={() => router.push('/notifications')}
-            style={{ alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: c.chip,  width: 42, height: 42 }}>
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 16,
+              backgroundColor: c.chip,
+              width: 42,
+              height: 42,
+            }}>
             <Bell size={20} color={c.ink} strokeWidth={2} />
             <View
               style={{

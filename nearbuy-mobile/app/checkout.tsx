@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
 import { Check, CreditCard, ShieldCheck, Smartphone, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useColors } from '@/lib/ThemeContext';
 import {
   type ApiListing,
+  ApiError,
   type CheckoutPaymentChannel,
   formatGhs,
   listingsApi,
@@ -27,6 +28,27 @@ type Step = 'review' | 'processing' | 'success';
 
 const fmt = (n: number) =>
   'GHS ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const wait = (milliseconds: number, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      const error = new Error('Payment cancelled');
+      error.name = 'AbortError';
+      reject(error);
+      return;
+    }
+    const timer = setTimeout(resolve, milliseconds);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        const error = new Error('Payment cancelled');
+        error.name = 'AbortError';
+        reject(error);
+      },
+      { once: true }
+    );
+  });
 
 export default function Checkout() {
   const router = useRouter();
@@ -45,10 +67,13 @@ export default function Checkout() {
   const [step, setStep] = useState<Step>('review');
   const [paymentChannel, setPaymentChannel] = useState<CheckoutPaymentChannel>('MOBILE_MONEY');
   const [orderRef, setOrderRef] = useState('');
+  const [processingMessage, setProcessingMessage] = useState('Connecting securely to Paystack.');
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: number;
     reference: string;
   } | null>(null);
+  const requestAbort = useRef<AbortController | null>(null);
+  const paymentAttempt = useRef(0);
 
   useEffect(() => {
     if (listing || !token || !Number.isFinite(listingId)) return;
@@ -67,43 +92,99 @@ export default function Checkout() {
 
   const close = () => router.back();
 
+  const abandonPaymentAttempt = (notify = true) => {
+    paymentAttempt.current += 1;
+    requestAbort.current?.abort();
+    requestAbort.current = null;
+    try {
+      WebBrowser.dismissAuthSession();
+    } catch {
+      /* No browser is open. */
+    }
+    setPendingPayment(null);
+    setStep('review');
+    if (notify) showToast('Payment attempt cancelled · choose another method');
+  };
+
+  const verifyWithRetry = async (orderId: number, reference: string, signal: AbortSignal) => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        return await paymentsApi.verifyOrderPayment(token!, orderId, reference, signal);
+      } catch (error) {
+        const stillProcessing = error instanceof ApiError && error.status === 409;
+        if (!stillProcessing || attempt === 7) throw error;
+        setProcessingMessage('Waiting for Mobile Money or Paystack confirmation…');
+        await wait(2500, signal);
+      }
+    }
+    throw new Error('Payment is not confirmed yet');
+  };
+
   const pay = async () => {
     if (!token || !listing) return showToast('Listing is still loading');
+    const attempt = ++paymentAttempt.current;
+    const controller = new AbortController();
+    requestAbort.current?.abort();
+    requestAbort.current = controller;
+    setProcessingMessage(
+      pendingPayment
+        ? 'Checking your existing payment…'
+        : paymentChannel === 'MOBILE_MONEY'
+          ? 'Starting Mobile Money checkout…'
+          : 'Starting secure card checkout…'
+    );
     setStep('processing');
     try {
       let paid;
       if (pendingPayment) {
-        paid = await paymentsApi.verifyOrderPayment(
-          token,
+        paid = await verifyWithRetry(
           pendingPayment.orderId,
-          pendingPayment.reference
+          pendingPayment.reference,
+          controller.signal
         );
       } else {
-        const created = await paymentsApi.createOrder(token, listing.id);
+        const created = await paymentsApi.createOrder(token, listing.id, controller.signal);
         const initialized = await paymentsApi.initializeOrderPayment(
           token,
           created.id,
-          paymentChannel
+          paymentChannel,
+          controller.signal
         );
         if (initialized.provider === 'SANDBOX') {
-          paid = await paymentsApi.payOrder(token, created.id);
+          paid = await paymentsApi.payOrder(token, created.id, controller.signal);
         } else {
           if (!initialized.authorizationUrl || !initialized.reference)
             throw new Error('Paystack checkout is unavailable');
           setPendingPayment({ orderId: created.id, reference: initialized.reference });
-          await WebBrowser.openAuthSessionAsync(
+          setProcessingMessage('Complete the payment in the secure Paystack window.');
+          const browserResult = await WebBrowser.openAuthSessionAsync(
             initialized.authorizationUrl,
             'nearbuy://payment-complete'
           );
-          paid = await paymentsApi.verifyOrderPayment(token, created.id, initialized.reference);
+          if (attempt !== paymentAttempt.current) return;
+          if (browserResult.type !== 'success') {
+            setStep('review');
+            showToast('Payment window closed · resume or choose another method');
+            return;
+          }
+          setProcessingMessage('Confirming your payment with Paystack…');
+          paid = await verifyWithRetry(created.id, initialized.reference, controller.signal);
         }
       }
+      if (attempt !== paymentAttempt.current) return;
       setPendingPayment(null);
       setOrderRef(`NB-${paid.id}`);
       setStep('success');
     } catch (error) {
+      if (
+        attempt !== paymentAttempt.current ||
+        (error instanceof Error && error.name === 'AbortError')
+      )
+        return;
       setStep('review');
       showToast(error instanceof Error ? error.message : 'Payment could not be secured');
+    } finally {
+      if (attempt === paymentAttempt.current) requestAbort.current = null;
     }
   };
 
@@ -262,6 +343,7 @@ export default function Checkout() {
                 <PaymentOption
                   title="Mobile Money"
                   subtitle="Pay with MTN, Telecel or AT Money"
+                  recommended
                   selected={paymentChannel === 'MOBILE_MONEY'}
                   disabled={Boolean(pendingPayment)}
                   onPress={() => setPaymentChannel('MOBILE_MONEY')}
@@ -276,6 +358,20 @@ export default function Checkout() {
                   icon="card"
                 />
               </View>
+              {pendingPayment ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => abandonPaymentAttempt()}
+                  style={({ pressed }) => ({
+                    alignSelf: 'flex-start',
+                    marginTop: 12,
+                    opacity: pressed ? 0.6 : 1,
+                  })}>
+                  <Text style={{ fontFamily: FONTS.extrabold, fontSize: 12, color: c.danger }}>
+                    Cancel this attempt and choose another method
+                  </Text>
+                </Pressable>
+              ) : null}
               <Text
                 style={{
                   fontFamily: FONTS.medium,
@@ -365,8 +461,24 @@ export default function Checkout() {
                 marginTop: 6,
                 textAlign: 'center',
               }}>
-              Waiting for Paystack to confirm the payment.
+              {processingMessage}
             </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => abandonPaymentAttempt()}
+              style={({ pressed }) => ({
+                marginTop: 24,
+                borderWidth: 1.5,
+                borderColor: c.border,
+                borderRadius: 13,
+                paddingVertical: 11,
+                paddingHorizontal: 22,
+                opacity: pressed ? 0.65 : 1,
+              })}>
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13, color: c.ink }}>
+                Cancel payment
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -504,6 +616,7 @@ function PaymentOption({
   subtitle,
   selected,
   disabled,
+  recommended,
   onPress,
   icon,
 }: {
@@ -511,6 +624,7 @@ function PaymentOption({
   subtitle: string;
   selected: boolean;
   disabled: boolean;
+  recommended?: boolean;
   onPress: () => void;
   icon: 'mobile-money' | 'card';
 }) {
@@ -549,7 +663,22 @@ function PaymentOption({
         )}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: c.ink }}>{title}</Text>
+          {recommended ? (
+            <View
+              style={{
+                backgroundColor: MODES.shop.tagBg,
+                borderRadius: 7,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+              }}>
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 8.5, color: ON_TINT }}>
+                RECOMMENDED
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: c.muted }}>{subtitle}</Text>
       </View>
       <View

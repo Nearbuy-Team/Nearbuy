@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthInput } from '@/components/AuthInput';
+import { KeyboardSafeView } from '@/components/KeyboardSafeView';
 import { useToast } from '@/components/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
 import { useColors, useTheme } from '@/lib/ThemeContext';
@@ -143,145 +144,153 @@ export default function Forgot() {
         </Pressable>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 14, paddingBottom: 40 }}>
-        <Text
-          style={{ fontFamily: FONTS.extrabold, fontSize: 26, letterSpacing: -0.8, color: c.ink }}>
-          {copy.title}
-        </Text>
-        {!!copy.sub && (
+      <KeyboardSafeView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingHorizontal: 26, paddingTop: 14, paddingBottom: 40 }}>
           <Text
             style={{
-              fontFamily: FONTS.medium,
-              fontSize: 13.5,
-              color: c.secondary,
-              marginTop: 7,
-              lineHeight: 20,
+              fontFamily: FONTS.extrabold,
+              fontSize: 26,
+              letterSpacing: -0.8,
+              color: c.ink,
             }}>
-            {copy.sub}
+            {copy.title}
           </Text>
-        )}
-
-        {step === 'email' && (
-          <View style={{ marginTop: 24 }}>
-            <AuthInput
-              label="EMAIL"
-              value={email}
-              onChangeText={setEmail}
-              error={err.email}
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-        )}
-
-        {step === 'code' && (
-          <View style={{ marginTop: 24 }}>
-            <AuthInput
-              label="RESET CODE"
-              value={code}
-              onChangeText={setCode}
-              error={err.code}
-              placeholder="Enter 6-digit code"
-              keyboardType="number-pad"
-              maxLength={6}
-              style={{ letterSpacing: 4, fontFamily: FONTS.extrabold }}
-            />
-            <Pressable
-              onPress={() => void onResend()}
-              disabled={resendCooldown > 0 || submitting}
-              style={{ alignSelf: 'flex-start', marginTop: 12 }}>
-              <Text
-                style={{
-                  fontFamily: FONTS.extrabold,
-                  fontSize: 12.5,
-                  color: resendCooldown > 0 ? c.muted : c.ink,
-                }}>
-                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
-        {step === 'reset' && (
-          <View style={{ marginTop: 24, gap: 16 }}>
-            <AuthInput
-              label="NEW PASSWORD"
-              value={pw}
-              onChangeText={setPw}
-              placeholder="At least 10 characters"
-              secureTextEntry
-            />
-            <AuthInput
-              label="CONFIRM PASSWORD"
-              value={pw2}
-              onChangeText={setPw2}
-              error={err.pw}
-              placeholder="Re-enter password"
-              secureTextEntry
-            />
-          </View>
-        )}
-
-        {step === 'done' && (
-          <View style={{ alignItems: 'center', paddingVertical: 36 }}>
-            <View
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 72,
-                height: 72,
-                borderRadius: 24,
-                backgroundColor: theme.accent,
-                shadowColor: theme.accent,
-                shadowOffset: { width: 0, height: 16 },
-                shadowOpacity: 0.7,
-                shadowRadius: 22,
-                elevation: 8,
-              }}>
-              <Check size={34} color={theme.accentText} strokeWidth={3} />
-            </View>
-            <Text
-              style={{ fontFamily: FONTS.extrabold, fontSize: 18, color: c.ink, marginTop: 18 }}>
-              Password updated
-            </Text>
+          {!!copy.sub && (
             <Text
               style={{
                 fontFamily: FONTS.medium,
-                fontSize: 13,
+                fontSize: 13.5,
                 color: c.secondary,
-                marginTop: 6,
-                textAlign: 'center',
+                marginTop: 7,
+                lineHeight: 20,
               }}>
-              You can now log in with your new password.
-            </Text>
-          </View>
-        )}
-
-        <Pressable
-          onPress={onPrimary}
-          disabled={submitting}
-          style={({ pressed }) => ({
-            marginTop: 26,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: theme.accent,
-            paddingVertical: 15,
-            borderRadius: 15,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}>
-          {submitting ? (
-            <ActivityIndicator color={theme.accentText} />
-          ) : (
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
-              {copy.primary}
+              {copy.sub}
             </Text>
           )}
-        </Pressable>
-      </ScrollView>
+
+          {step === 'email' && (
+            <View style={{ marginTop: 24 }}>
+              <AuthInput
+                label="EMAIL"
+                value={email}
+                onChangeText={setEmail}
+                error={err.email}
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          )}
+
+          {step === 'code' && (
+            <View style={{ marginTop: 24 }}>
+              <AuthInput
+                label="RESET CODE"
+                value={code}
+                onChangeText={setCode}
+                error={err.code}
+                placeholder="Enter 6-digit code"
+                keyboardType="number-pad"
+                maxLength={6}
+                style={{ letterSpacing: 4, fontFamily: FONTS.extrabold }}
+              />
+              <Pressable
+                onPress={() => void onResend()}
+                disabled={resendCooldown > 0 || submitting}
+                style={{ alignSelf: 'flex-start', marginTop: 12 }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.extrabold,
+                    fontSize: 12.5,
+                    color: resendCooldown > 0 ? c.muted : c.ink,
+                  }}>
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          {step === 'reset' && (
+            <View style={{ marginTop: 24, gap: 16 }}>
+              <AuthInput
+                label="NEW PASSWORD"
+                value={pw}
+                onChangeText={setPw}
+                placeholder="At least 10 characters"
+                secureTextEntry
+              />
+              <AuthInput
+                label="CONFIRM PASSWORD"
+                value={pw2}
+                onChangeText={setPw2}
+                error={err.pw}
+                placeholder="Re-enter password"
+                secureTextEntry
+              />
+            </View>
+          )}
+
+          {step === 'done' && (
+            <View style={{ alignItems: 'center', paddingVertical: 36 }}>
+              <View
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 72,
+                  height: 72,
+                  borderRadius: 24,
+                  backgroundColor: theme.accent,
+                  shadowColor: theme.accent,
+                  shadowOffset: { width: 0, height: 16 },
+                  shadowOpacity: 0.7,
+                  shadowRadius: 22,
+                  elevation: 8,
+                }}>
+                <Check size={34} color={theme.accentText} strokeWidth={3} />
+              </View>
+              <Text
+                style={{ fontFamily: FONTS.extrabold, fontSize: 18, color: c.ink, marginTop: 18 }}>
+                Password updated
+              </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.medium,
+                  fontSize: 13,
+                  color: c.secondary,
+                  marginTop: 6,
+                  textAlign: 'center',
+                }}>
+                You can now log in with your new password.
+              </Text>
+            </View>
+          )}
+
+          <Pressable
+            onPress={onPrimary}
+            disabled={submitting}
+            style={({ pressed }) => ({
+              marginTop: 26,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.accent,
+              paddingVertical: 15,
+              borderRadius: 15,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}>
+            {submitting ? (
+              <ActivityIndicator color={theme.accentText} />
+            ) : (
+              <Text style={{ fontFamily: FONTS.extrabold, fontSize: 15, color: theme.accentText }}>
+                {copy.primary}
+              </Text>
+            )}
+          </Pressable>
+        </ScrollView>
+      </KeyboardSafeView>
     </SafeAreaView>
   );
 }

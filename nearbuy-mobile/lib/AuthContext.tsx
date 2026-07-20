@@ -38,6 +38,7 @@ interface AuthContextValue {
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   refreshUser: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   logout: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
 }
@@ -199,6 +200,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!token) return;
         const current = await usersApi.me(token);
         await persistSession(token, current);
+      },
+      deleteAccount: async (password) => {
+        if (!token) throw new Error('Log in again before deleting your account.');
+        await usersApi.deleteMe(token, password);
+        setPending(null);
+        await clearSession();
       },
       logout: clearSession,
       completeOnboarding: async () => {
