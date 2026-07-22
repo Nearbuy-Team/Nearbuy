@@ -19,7 +19,16 @@ export function SearchBar({ placeholder, query, onQueryChange }: SearchBarProps)
   const c = useColors();
   return (
     <View
-      style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', borderRadius: 16, backgroundColor: c.chip,  gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
+      style={{
+        marginTop: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 16,
+        backgroundColor: c.chip,
+        gap: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+      }}>
       <Search size={17} color={c.muted} strokeWidth={2.2} />
       <TextInput
         value={query}
@@ -39,7 +48,15 @@ export function SearchBar({ placeholder, query, onQueryChange }: SearchBarProps)
         <Pressable
           onPress={() => onQueryChange('')}
           hitSlop={8}
-          style={({ pressed }) => ({ height: 20, width: 20, alignItems: 'center', justifyContent: 'center', borderRadius: 9999,  backgroundColor: c.track, transform: [{ scale: pressed ? 0.85 : 1 }] })}>
+          style={({ pressed }) => ({
+            height: 20,
+            width: 20,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 9999,
+            backgroundColor: c.track,
+            transform: [{ scale: pressed ? 0.85 : 1 }],
+          })}>
           <X size={11} color={c.secondary} strokeWidth={3} />
         </Pressable>
       )}

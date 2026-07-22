@@ -86,7 +86,9 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
       setListingStatus: async (listing, status) => {
         if (!token) throw new Error('Log in to update a listing');
         const updated = await listingsApi.setStatus(token, listing.id, status);
-        setMyListings((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+        setMyListings((current) =>
+          current.map((item) => (item.id === updated.id ? updated : item))
+        );
         setListings((current) => {
           const without = current.filter((item) => item.id !== updated.id);
           return updated.status === 'ACTIVE' ? [updated, ...without] : without;
@@ -100,7 +102,8 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
         setMyListings((current) => current.filter((item) => item.id !== listing.id));
       },
       findListing: (id) =>
-        listings.find((listing) => listing.id === id) ?? myListings.find((listing) => listing.id === id),
+        listings.find((listing) => listing.id === id) ??
+        myListings.find((listing) => listing.id === id),
       draftCategory,
       setDraftCategory,
     }),

@@ -36,12 +36,12 @@ export function MyListingCard({ listing, onToggle, onEdit }: MyListingCardProps)
         padding: 14,
         ...SHADOWS.card,
       }}>
-      <View style={{ flexDirection: 'row',  gap: 12, alignItems: 'flex-start' }}>
+      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
         {/* thumbnail */}
         <View style={{ width: 52, height: 52, borderRadius: 13, backgroundColor: c.imgBg }} />
 
         <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 7 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
             {/* type badge */}
             <Text
               style={{
@@ -60,8 +60,10 @@ export function MyListingCard({ listing, onToggle, onEdit }: MyListingCardProps)
               {TYPE_LABEL[mode]}
             </Text>
             {/* status */}
-            <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 4 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: statusColor }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View
+                style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: statusColor }}
+              />
               <Text style={{ fontFamily: FONTS.extrabold, fontSize: 10, color: statusColor }}>
                 {listing.status[0] + listing.status.slice(1).toLowerCase()}
               </Text>
@@ -70,7 +72,13 @@ export function MyListingCard({ listing, onToggle, onEdit }: MyListingCardProps)
 
           <Text
             numberOfLines={1}
-            style={{ fontFamily: FONTS.extrabold, fontSize: 14.5, color: c.ink, letterSpacing: -0.3, marginTop: 6 }}>
+            style={{
+              fontFamily: FONTS.extrabold,
+              fontSize: 14.5,
+              color: c.ink,
+              letterSpacing: -0.3,
+              marginTop: 6,
+            }}>
             {listing.title}
           </Text>
           <Text style={{ fontFamily: FONTS.bold, fontSize: 13, color: c.secondary, marginTop: 2 }}>
@@ -81,14 +89,22 @@ export function MyListingCard({ listing, onToggle, onEdit }: MyListingCardProps)
 
       {/* footer: stats + actions */}
       <View
-        style={{ flexDirection: 'row', alignItems: 'center',  gap: 14, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: c.divider }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 5 }}>
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14,
+          marginTop: 12,
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: c.divider,
+        }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
           <Eye size={13} color={c.muted} strokeWidth={2.2} />
           <Text style={{ fontFamily: FONTS.semibold, fontSize: 11.5, color: c.secondary }}>
             {listing.viewCount} views
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center',  gap: 5 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
           <MessageCircle size={13} color={c.muted} strokeWidth={2.2} />
           <Text style={{ fontFamily: FONTS.semibold, fontSize: 11.5, color: c.secondary }}>
             {listing.chatCount} chats
@@ -119,7 +135,9 @@ export function MyListingCard({ listing, onToggle, onEdit }: MyListingCardProps)
             borderRadius: 10,
             transform: [{ scale: pressed ? 0.96 : 1 }],
           })}>
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: c.surface }}>Delete</Text>
+          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: c.surface }}>
+            Delete
+          </Text>
         </Pressable>
       </View>
     </View>

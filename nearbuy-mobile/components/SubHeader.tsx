@@ -21,7 +21,9 @@ export function SubHeader({ title, right }: SubHeaderProps) {
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: c.surface }}>
       <View
-        style={{ flexDirection: 'row', alignItems: 'center',
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
           gap: 12,
           paddingHorizontal: 18,
           paddingVertical: 14,
@@ -31,11 +33,25 @@ export function SubHeader({ title, right }: SubHeaderProps) {
         <Pressable
           onPress={() => router.back()}
           hitSlop={8}
-          style={({ pressed }) => ({ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: c.chip, transform: [{ scale: pressed ? 0.92 : 1 }] })}>
+          style={({ pressed }) => ({
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 36,
+            height: 36,
+            borderRadius: 11,
+            backgroundColor: c.chip,
+            transform: [{ scale: pressed ? 0.92 : 1 }],
+          })}>
           <ChevronLeft size={17} color={c.ink} strokeWidth={2.6} />
         </Pressable>
         <Text
-          style={{ flex: 1, fontFamily: FONTS.extrabold, fontSize: 17, color: c.ink, letterSpacing: -0.4 }}>
+          style={{
+            flex: 1,
+            fontFamily: FONTS.extrabold,
+            fontSize: 17,
+            color: c.ink,
+            letterSpacing: -0.4,
+          }}>
           {title}
         </Text>
         {right}

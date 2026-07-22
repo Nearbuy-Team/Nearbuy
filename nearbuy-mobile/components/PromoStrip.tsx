@@ -45,11 +45,22 @@ export function PromoStrip() {
       />
 
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 13.5, color: '#FFFFFF', letterSpacing: -0.2 }}>
+        <Text
+          style={{
+            fontFamily: FONTS.extrabold,
+            fontSize: 13.5,
+            color: '#FFFFFF',
+            letterSpacing: -0.2,
+          }}>
           {theme.promoTitle}
         </Text>
         <Text
-          style={{ fontFamily: FONTS.medium, fontSize: 11.5, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>
+          style={{
+            fontFamily: FONTS.medium,
+            fontSize: 11.5,
+            color: 'rgba(255,255,255,0.6)',
+            marginTop: 3,
+          }}>
           {theme.promoSub}
         </Text>
       </View>
@@ -66,7 +77,9 @@ export function PromoStrip() {
           borderRadius: 11,
           transform: [{ scale: pressed ? 0.95 : 1 }],
         })}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: theme.accentText }}>Explore</Text>
+        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 11.5, color: theme.accentText }}>
+          Explore
+        </Text>
         <ChevronRight size={12} color={theme.accentText} strokeWidth={3} />
       </Pressable>
     </LinearGradient>

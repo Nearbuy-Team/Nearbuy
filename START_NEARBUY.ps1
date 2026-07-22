@@ -41,6 +41,60 @@ if (-not (Test-Path (Join-Path $mobileDirectory 'node_modules'))) {
 
 # The hosted HTTPS backend remains available independently of this laptop.
 $env:EXPO_PUBLIC_API_URL = $hostedApiUrl
+
+# Free Render services sleep after 15 idle minutes and take minutes to wake, so
+# wake every service before Expo opens and keep them warm while testing.
+$hostedServiceUrls = @(
+    'https://nearbuy-api-7c197b38.onrender.com',
+    'https://nearbuy-user-7c197b38.onrender.com',
+    'https://nearbuy-listing-7c197b38.onrender.com',
+    'https://nearbuy-chat-7c197b38.onrender.com',
+    'https://nearbuy-payment-7c197b38.onrender.com'
+)
+
+$pingServiceBlock = {
+    param($target, $timeoutMinutes)
+    $deadline = (Get-Date).AddMinutes($timeoutMinutes)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            Invoke-WebRequest -Uri $target -UseBasicParsing -TimeoutSec 90 | Out-Null
+            return $true
+        } catch {
+            # Any HTTP status (401/403/404) still proves the service is awake.
+            if ($_.Exception.Response) { return $true }
+        }
+        Start-Sleep -Seconds 5
+    }
+    return $false
+}
+
+Write-Host 'Waking the hosted backend (cold Render services can take 3-5 minutes)...'
+$wakeJobs = foreach ($serviceUrl in $hostedServiceUrls) {
+    Start-Job -ScriptBlock $pingServiceBlock -ArgumentList $serviceUrl, 7
+}
+$null = Wait-Job -Job $wakeJobs -Timeout 450
+for ($index = 0; $index -lt $wakeJobs.Count; $index++) {
+    $awake = Receive-Job -Job $wakeJobs[$index] -ErrorAction SilentlyContinue
+    $serviceName = ([Uri]$hostedServiceUrls[$index]).Host.Split('.')[0]
+    if ($awake -eq $true) {
+        Write-Host "  $serviceName is awake." -ForegroundColor Green
+    } else {
+        Write-Warning "  $serviceName did not respond. Check https://dashboard.render.com before demoing."
+    }
+}
+Remove-Job -Job $wakeJobs -Force -ErrorAction SilentlyContinue
+
+# Ping every service each 5 minutes so nothing falls asleep mid-demo. The job
+# is removed when this script exits (Ctrl+C included) via the finally block.
+$keepAliveJob = Start-Job -ScriptBlock {
+    param($targets)
+    while ($true) {
+        foreach ($target in $targets) {
+            try { Invoke-WebRequest -Uri $target -UseBasicParsing -TimeoutSec 90 | Out-Null } catch {}
+        }
+        Start-Sleep -Seconds 300
+    }
+} -ArgumentList (, $hostedServiceUrls)
 $connectionMode = if ($Tunnel) { 'tunnel' } else { 'lan' }
 $expoArguments = @('expo', 'start', "--$connectionMode", '--go', '--port', '8081')
 if (-not $KeepCache) {
@@ -64,4 +118,8 @@ try {
     & npx.cmd @expoArguments
 } finally {
     Pop-Location
+    if ($keepAliveJob) {
+        Stop-Job -Job $keepAliveJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $keepAliveJob -Force -ErrorAction SilentlyContinue
+    }
 }

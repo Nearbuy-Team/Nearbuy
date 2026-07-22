@@ -30,7 +30,13 @@ export default function Category() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 16, paddingHorizontal: 20, paddingBottom: 40 }}>
-        <View style={{ backgroundColor: cols.surface, borderRadius: 16, overflow: 'hidden', ...SHADOWS.row }}>
+        <View
+          style={{
+            backgroundColor: cols.surface,
+            borderRadius: 16,
+            overflow: 'hidden',
+            ...SHADOWS.row,
+          }}>
           {CATEGORIES.map((c, i) => {
             const selected = c === draftCategory;
             return (
@@ -46,7 +52,9 @@ export default function Category() {
                   borderBottomColor: cols.divider,
                   opacity: pressed ? 0.6 : 1,
                 })}>
-                <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: cols.ink }}>{c}</Text>
+                <Text style={{ flex: 1, fontFamily: FONTS.bold, fontSize: 14, color: cols.ink }}>
+                  {c}
+                </Text>
                 {selected && <Check size={18} color={theme.accent} strokeWidth={3} />}
               </Pressable>
             );
