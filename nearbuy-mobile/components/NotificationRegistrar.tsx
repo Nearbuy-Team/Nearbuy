@@ -63,7 +63,7 @@ export function NotificationRegistrar() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const route = response.notification.request.content.data.route;
+      const route = response.notification.request.content.data?.route;
       if (typeof route === 'string' && route.startsWith('/')) router.push(route as never);
     });
     return () => subscription.remove();

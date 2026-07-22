@@ -17,9 +17,19 @@ export function SellerCard({ seller, theme, onMessage }: SellerCardProps) {
   const c = useColors();
   return (
     <View
-      style={{ flexDirection: 'row', alignItems: 'center',  gap: 13, backgroundColor: c.surface, borderRadius: 18, padding: 14, ...SHADOWS.card }}>
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 13,
+        backgroundColor: c.surface,
+        borderRadius: 18,
+        padding: 14,
+        ...SHADOWS.card,
+      }}>
       <View
-        style={{ alignItems: 'center', justifyContent: 'center',
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
           width: 46,
           height: 46,
           borderRadius: 14,
@@ -27,15 +37,22 @@ export function SellerCard({ seller, theme, onMessage }: SellerCardProps) {
           borderWidth: 1,
           borderColor: theme.tagBorder,
         }}>
-        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 16, color: ON_TINT }}>{seller.initial}</Text>
+        <Text style={{ fontFamily: FONTS.extrabold, fontSize: 16, color: ON_TINT }}>
+          {seller.initial}
+        </Text>
       </View>
 
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text numberOfLines={1} style={{ fontFamily: FONTS.extrabold, fontSize: 14.5, color: c.ink }}>
+        <Text
+          numberOfLines={1}
+          style={{ fontFamily: FONTS.extrabold, fontSize: 14.5, color: c.ink }}>
           {seller.name}
         </Text>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            alignSelf: 'flex-start',
             gap: 4,
             marginTop: 3,
             backgroundColor: theme.tagBg,

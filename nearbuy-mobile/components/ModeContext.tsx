@@ -14,10 +14,7 @@ const ModeContext = createContext<ModeContextValue | null>(null);
 export function ModeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<Mode>('shop');
 
-  const value = useMemo<ModeContextValue>(
-    () => ({ mode, setMode, theme: MODES[mode] }),
-    [mode]
-  );
+  const value = useMemo<ModeContextValue>(() => ({ mode, setMode, theme: MODES[mode] }), [mode]);
 
   return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
 }

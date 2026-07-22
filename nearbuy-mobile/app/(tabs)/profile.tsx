@@ -69,7 +69,9 @@ export default function Profile() {
         contentContainerStyle={{ paddingTop: 12, paddingHorizontal: 20, paddingBottom: 110 }}>
         {/* header card */}
         <View
-          style={{ flexDirection: 'row', alignItems: 'center',
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
             gap: 15,
             backgroundColor: c.surface,
             borderRadius: 22,
@@ -78,7 +80,9 @@ export default function Profile() {
             ...SHADOWS.card,
           }}>
           <View
-            style={{ alignItems: 'center', justifyContent: 'center',
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
               width: 60,
               height: 60,
               borderRadius: 20,
@@ -86,22 +90,38 @@ export default function Profile() {
               borderWidth: 1,
               borderColor: theme.tagBorder,
             }}>
-            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 22, color: ON_TINT }}>{initials}</Text>
+            <Text style={{ fontFamily: FONTS.extrabold, fontSize: 22, color: ON_TINT }}>
+              {initials}
+            </Text>
           </View>
 
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               numberOfLines={1}
-              style={{ fontFamily: FONTS.extrabold, fontSize: 18, color: c.ink, letterSpacing: -0.4 }}>
+              style={{
+                fontFamily: FONTS.extrabold,
+                fontSize: 18,
+                color: c.ink,
+                letterSpacing: -0.4,
+              }}>
               {user?.name || 'Nearbuy member'}
             </Text>
-            <Text style={{ fontFamily: FONTS.medium, fontSize: 12.5, color: c.secondary, marginTop: 2 }}>
+            <Text
+              style={{
+                fontFamily: FONTS.medium,
+                fontSize: 12.5,
+                color: c.secondary,
+                marginTop: 2,
+              }}>
               {user?.email || 'Signed in'} · Member since {memberSince}
             </Text>
 
             {/* verified pill */}
             <View
-              style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
                 gap: 4,
                 marginTop: 8,
                 backgroundColor: theme.tagBg,
@@ -136,7 +156,9 @@ export default function Profile() {
                 ...SHADOWS.row,
               })}>
               <View
-                style={{ alignItems: 'center', justifyContent: 'center',
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   width: 34,
                   height: 34,
                   borderRadius: 10,

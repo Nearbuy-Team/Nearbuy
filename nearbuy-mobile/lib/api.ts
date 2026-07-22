@@ -136,20 +136,10 @@ export interface ApiMessage {
 }
 
 export type OrderStatus =
-  | 'PENDING'
-  | 'PAID'
-  | 'REFUND_PENDING'
-  | 'REFUNDED'
-  | 'COMPLETED'
-  | 'CANCELLED';
+  'PENDING' | 'PAID' | 'REFUND_PENDING' | 'REFUNDED' | 'COMPLETED' | 'CANCELLED';
 export type PayoutStatus = 'NOT_STARTED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
 export type RefundStatus =
-  | 'NOT_REQUESTED'
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'NEEDS_ATTENTION'
-  | 'PROCESSED'
-  | 'FAILED';
+  'NOT_REQUESTED' | 'PENDING' | 'PROCESSING' | 'NEEDS_ATTENTION' | 'PROCESSED' | 'FAILED';
 
 export interface ApiOrder {
   id: number;

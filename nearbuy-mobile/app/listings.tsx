@@ -26,7 +26,9 @@ export default function Listings() {
       {/* top bar */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: c.surface }}>
         <View
-          style={{ flexDirection: 'row', alignItems: 'center',
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
             gap: 12,
             paddingHorizontal: 18,
             paddingVertical: 14,
@@ -35,10 +37,24 @@ export default function Listings() {
           }}>
           <Pressable
             onPress={() => router.back()}
-            style={{ alignItems: 'center', justifyContent: 'center',  width: 36, height: 36, borderRadius: 11, backgroundColor: c.chip }}>
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: 11,
+              backgroundColor: c.chip,
+            }}>
             <ChevronLeft size={17} color={c.ink} strokeWidth={2.6} />
           </Pressable>
-          <Text style={{ flex: 1, fontFamily: FONTS.extrabold, fontSize: 17, color: c.ink, letterSpacing: -0.4 }}>
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: FONTS.extrabold,
+              fontSize: 17,
+              color: c.ink,
+              letterSpacing: -0.4,
+            }}>
             My listings
           </Text>
           <Text style={{ fontFamily: FONTS.bold, fontSize: 12.5, color: c.muted }}>
@@ -64,7 +80,9 @@ export default function Listings() {
             transform: [{ scale: pressed ? 0.98 : 1 }],
           })}>
           <Plus size={16} color={theme.accentText} strokeWidth={3} />
-          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 14, color: theme.accentText }}>New listing</Text>
+          <Text style={{ fontFamily: FONTS.extrabold, fontSize: 14, color: theme.accentText }}>
+            New listing
+          </Text>
         </Pressable>
 
         <View style={{ gap: 12 }}>
@@ -74,7 +92,11 @@ export default function Listings() {
               listing={listing}
               onToggle={() => {
                 void setListingStatus(listing, listing.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE')
-                  .then(() => showToast(listing.status === 'ACTIVE' ? 'Listing paused' : 'Listing reactivated'))
+                  .then(() =>
+                    showToast(
+                      listing.status === 'ACTIVE' ? 'Listing paused' : 'Listing reactivated'
+                    )
+                  )
                   .catch((error) =>
                     showToast(error instanceof Error ? error.message : 'Could not update listing')
                   );
@@ -89,7 +111,9 @@ export default function Listings() {
                       void removeListing(listing)
                         .then(() => showToast('Listing deleted'))
                         .catch((error) =>
-                          showToast(error instanceof Error ? error.message : 'Could not delete listing')
+                          showToast(
+                            error instanceof Error ? error.message : 'Could not delete listing'
+                          )
                         );
                     },
                   },

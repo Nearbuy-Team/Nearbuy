@@ -113,10 +113,34 @@ export interface ChatThread {
 }
 
 export const CHAT_THREADS: ChatThread[] = [
-  { initial: 'K', name: 'Kwame A.', last: 'On my way — should be there by 2pm 🚗', time: 'now', unread: true },
-  { initial: 'S', name: 'SparkleCo', last: 'Your deep-clean is confirmed for Sat.', time: '12m', unread: true },
-  { initial: 'M', name: 'Mensah Rentals', last: 'Generator deposit received, thanks!', time: '1h', unread: false },
-  { initial: 'A', name: 'Ama O. (Tutor)', last: 'See you at the next session.', time: 'Tue', unread: false },
+  {
+    initial: 'K',
+    name: 'Kwame A.',
+    last: 'On my way — should be there by 2pm 🚗',
+    time: 'now',
+    unread: true,
+  },
+  {
+    initial: 'S',
+    name: 'SparkleCo',
+    last: 'Your deep-clean is confirmed for Sat.',
+    time: '12m',
+    unread: true,
+  },
+  {
+    initial: 'M',
+    name: 'Mensah Rentals',
+    last: 'Generator deposit received, thanks!',
+    time: '1h',
+    unread: false,
+  },
+  {
+    initial: 'A',
+    name: 'Ama O. (Tutor)',
+    last: 'See you at the next session.',
+    time: 'Tue',
+    unread: false,
+  },
 ];
 
 export interface WalletTxn {
@@ -227,11 +251,31 @@ export interface AppNotification {
 }
 
 export const NOTIFICATIONS: AppNotification[] = [
-  { title: 'Payment secured', sub: 'Your payment for "AC Repair Technician" is confirmed.', time: '2m', unread: true },
-  { title: 'New message from Kwame A.', sub: 'On my way — should be there by 2pm 🚗', time: '15m', unread: true },
+  {
+    title: 'Payment secured',
+    sub: 'Your payment for "AC Repair Technician" is confirmed.',
+    time: '2m',
+    unread: true,
+  },
+  {
+    title: 'New message from Kwame A.',
+    sub: 'On my way — should be there by 2pm 🚗',
+    time: '15m',
+    unread: true,
+  },
   { title: 'Listing approved', sub: '"iPhone 13 Pro" is now live.', time: '1h', unread: false },
-  { title: 'Price drop nearby', sub: 'Nike Air Force 1 dropped to GHS 520.', time: '3h', unread: false },
-  { title: 'Deposit refunded', sub: 'GHS 500 generator deposit returned to your wallet.', time: 'Yesterday', unread: false },
+  {
+    title: 'Price drop nearby',
+    sub: 'Nike Air Force 1 dropped to GHS 520.',
+    time: '3h',
+    unread: false,
+  },
+  {
+    title: 'Deposit refunded',
+    sub: 'GHS 500 generator deposit returned to your wallet.',
+    time: 'Yesterday',
+    unread: false,
+  },
 ];
 
 export type OrderStatus = 'In escrow' | 'Completed' | 'Booked' | 'Cancelled';
@@ -244,7 +288,12 @@ export interface Order {
 }
 
 export const ORDERS: Order[] = [
-  { title: 'AC Repair Technician', status: 'In escrow', meta: 'Booking · Today 2:00pm', amount: 'GHS 120' },
+  {
+    title: 'AC Repair Technician',
+    status: 'In escrow',
+    meta: 'Booking · Today 2:00pm',
+    amount: 'GHS 120',
+  },
   { title: 'iPhone 13 Pro', status: 'Completed', meta: 'Order · 12 Jun', amount: 'GHS 4,200' },
   { title: '25kVA Generator', status: 'Booked', meta: 'Rental · 14–16 Jun', amount: 'GHS 1,350' },
   { title: 'Home Deep Cleaning', status: 'Cancelled', meta: 'Booking · 8 Jun', amount: 'GHS 180' },
@@ -261,9 +310,27 @@ export interface Review {
 export const TRUST_SCORE = 92;
 
 export const REVIEWS: Review[] = [
-  { author: 'Kwame A.', initial: 'K', rating: 5, text: 'Smooth transaction, fast responses. Highly recommend!', time: '2d' },
-  { author: 'SparkleCo', initial: 'S', rating: 5, text: 'Great communication and on time. Will deal again.', time: '1w' },
-  { author: 'Mensah Rentals', initial: 'M', rating: 4, text: 'All good, returned the deposit promptly.', time: '3w' },
+  {
+    author: 'Kwame A.',
+    initial: 'K',
+    rating: 5,
+    text: 'Smooth transaction, fast responses. Highly recommend!',
+    time: '2d',
+  },
+  {
+    author: 'SparkleCo',
+    initial: 'S',
+    rating: 5,
+    text: 'Great communication and on time. Will deal again.',
+    time: '1w',
+  },
+  {
+    author: 'Mensah Rentals',
+    initial: 'M',
+    rating: 4,
+    text: 'All good, returned the deposit promptly.',
+    time: '3w',
+  },
 ];
 
 export interface PaymentMethod {
@@ -277,7 +344,13 @@ export interface PaymentMethod {
 export const PAYMENT_METHODS: PaymentMethod[] = [
   { brand: 'MoMo', label: 'MTN Mobile Money', sub: '•••• 0247', primary: true, tint: '#FFCC00' },
   { brand: 'VISA', label: 'Visa debit', sub: '•••• 4419', primary: false, tint: '#1A1F71' },
-  { brand: 'Cash', label: 'Cash on delivery', sub: 'Pay in person', primary: false, tint: '#0A7D3D' },
+  {
+    brand: 'Cash',
+    label: 'Cash on delivery',
+    sub: 'Pay in person',
+    primary: false,
+    tint: '#0A7D3D',
+  },
 ];
 
 export const CATEGORIES: string[] = [

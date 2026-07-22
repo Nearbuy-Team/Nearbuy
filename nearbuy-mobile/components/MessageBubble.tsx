@@ -3,7 +3,11 @@ import { Text, View } from 'react-native';
 import { useColors } from '@/lib/ThemeContext';
 import { FONTS } from '@/lib/theme';
 
-export function MessageBubble({ message }: { message: { mine: boolean; text: string; time: string } }) {
+export function MessageBubble({
+  message,
+}: {
+  message: { mine: boolean; text: string; time: string };
+}) {
   const mine = message.mine;
   const c = useColors();
 
@@ -25,7 +29,13 @@ export function MessageBubble({ message }: { message: { mine: boolean; text: str
           shadowRadius: 10,
           elevation: 1,
         }}>
-        <Text style={{ fontFamily: FONTS.medium, fontSize: 13.5, lineHeight: 19, color: mine ? c.surface : c.ink }}>
+        <Text
+          style={{
+            fontFamily: FONTS.medium,
+            fontSize: 13.5,
+            lineHeight: 19,
+            color: mine ? c.surface : c.ink,
+          }}>
           {message.text}
         </Text>
       </View>
